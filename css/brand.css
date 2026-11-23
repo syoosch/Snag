@@ -1,0 +1,93 @@
+:root {
+    color-scheme: light dark;
+    --page: #f7f7fb;
+    --card: #ffffff;
+    --text: #25263e;
+    --muted: #595b73;
+    --line: #d9d9e7;
+    --tint: #ececf9;
+    --accent: #45499a;
+    --on-accent: #ffffff;
+    --brand-ink: #383878;
+    --accent-hover: #3a3e87;
+    --accent-pressed: #30346f;
+    --overlay: #fffffff0;
+    --shadow: 0 6px 22px #34345618;
+    font-family: "Segoe UI", "Microsoft YaHei UI", system-ui, sans-serif;
+    color: var(--text);
+    background: var(--page);
+}
+@media (prefers-color-scheme: dark) {
+    :root {
+        --page: #1b1b2c;
+        --card: #252538;
+        --text: #f2f1fa;
+        --muted: #bcbbd0;
+        --line: #48485f;
+        --tint: #34344d;
+        --accent: #c1bfff;
+        --on-accent: #252442;
+        --accent-hover: #d0ceff;
+        --accent-pressed: #a9a7ec;
+        --overlay: #252538ef;
+        --shadow: 0 6px 22px #11102342;
+    }
+}
+
+/* Use a single baseline for keyboard focus, including on filled buttons. */
+:where(button, select, input, textarea, summary, a[href], [tabindex]):focus:not(:focus-visible) {
+    outline: none;
+}
+:where(button, select, input, textarea, summary, a[href], [tabindex]):focus-visible {
+    outline: none;
+    box-shadow: inset 0 -2px currentColor;
+}
+
+@supports (appearance: base-select) and selector(::picker(select)) {
+    select:where(:not([multiple], [size])),
+    select:where(:not([multiple], [size]))::picker(select) {
+        appearance: base-select;
+    }
+    select::picker(select) {
+        max-inline-size: calc(100vw - 12px);
+        max-block-size: min(55dvh, 22rem);
+        overflow: auto;
+        margin-block: 3px;
+        padding: 4px;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: var(--card);
+        color: var(--text);
+        box-shadow: var(--shadow);
+    }
+    select:where(:not([multiple], [size])) option {
+        gap: 7px;
+        padding: 5px 8px;
+        border-radius: 5px;
+        font-weight: normal;
+        line-height: 1.45;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+    select:where(:not([multiple], [size])) option:checked {
+        background: transparent;
+        color: var(--accent);
+        font-weight: 600;
+    }
+    select:where(:not([multiple], [size])) option:focus { outline: none; }
+    select:where(:not([multiple], [size])) option:is(:hover, :focus-visible):enabled { background: var(--tint); }
+    select:where(:not([multiple], [size])) option:disabled { color: var(--muted); }
+}
+
+@media (forced-colors: active) {
+    :where(button, select, input, textarea, summary, a[href], [tabindex]):focus-visible {
+        outline: 2px solid Highlight;
+        outline-offset: 2px;
+        box-shadow: none;
+    }
+    select:where(:not([multiple], [size])) option:is(:hover, :focus-visible):enabled {
+        forced-color-adjust: none;
+        background: Highlight;
+        color: HighlightText;
+    }
+}

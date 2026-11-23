@@ -1,0 +1,125 @@
+{
+  "libraries": {
+    "lib/base64.js": "08e9954c252792290cebaaaf9740f83129edfd7118acc79800fad00d697e88cd",
+    "lib/ffmpeg/LICENSE-GPLv2.txt": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
+    "lib/ffmpeg/LICENSE-LGPLv2.1.txt": "b634ab5640e258563c536e658cad87080553df6f34f62269a21d554844e58bfe",
+    "lib/ffmpeg/LICENSE-MIT.txt": "3e123e29517d76504ffce77b3f8e2ccffd4712493f27694b0aba3e376676459f",
+    "lib/ffmpeg/ffmpeg-core.js": "a34873964b0f62aec516bac75e3aa9086ec3535d4d07f0269aa94ea748b6cb71",
+    "lib/ffmpeg/ffmpeg-core.wasm": "2390efa7fb66e7e42dbae15427571a5ffc96b829480904c30f471f0a78967f61",
+    "lib/hls.min.js": "a12e7ee1cd64a69dcdb314157e45dafcba705bfb0b1440b7935cb265d374423e",
+    "lib/jquery.json-viewer.js": "4dbaba988d7f65eb9d51c93008685632557c4bf01ef5c41121fff2043560d049",
+    "lib/jquery.min.js": "39a546ea9ad97f8bfaf5d3e0e8f8556adb415e470e59007ada9759dce472adaa",
+    "lib/jquery.qrcode.min.js": "f4ccf02b69092819ac24575c717a080c3b6c6d6161f1b8d82bf0bb523075032d",
+    "lib/m3u8-decrypt.js": "11b5558323f781e4243016bcc8ad3039cc92c85470e4ab987f911e1b5550dbae",
+    "lib/mpd-parser.min.js": "ce8de67027bc8a2852c472b358caa877494f6fd39fa8c0821f72868aba5aedea",
+    "lib/mqtt.min.js": "75873d04a6400bbbac093b3602caf06f44ed92ee032925e1f4f21c03eba05a4e",
+    "lib/mux.min.js": "eb088a07f954554db7c38114487b21df6d1f28c4a84d53003644e962c7567b5b"
+  },
+  "packages": {},
+  "hostReferences": {
+    "js/background.js": [
+      "bugs.chromium.org",
+      "stackoverflow.com"
+    ],
+    "js/bili-playback.js": [
+      "api.bilibili.com"
+    ],
+    "js/init.js": [
+      "127.0.0.1",
+      "localhost"
+    ],
+    "js/media-bridge.js": [
+      "www.youtube.com"
+    ],
+    "js/sidebar.js": [
+      "api.bilibili.com"
+    ],
+    "manifest.firefox.json": [
+      "github.com",
+      "www.youtube.com"
+    ],
+    "manifest.json": [
+      "github.com",
+      "www.youtube.com"
+    ],
+    "options.html": [
+      "example.invalid",
+      "github.com",
+      "nilaoda.github.io"
+    ]
+  },
+  "externalEmbeds": {},
+  "browserAccess": {
+    "manifest.json": {
+      "permissions": [
+        "alarms",
+        "contextMenus",
+        "declarativeNetRequest",
+        "downloads",
+        "offscreen",
+        "scripting",
+        "sidePanel",
+        "storage",
+        "tabs",
+        "webNavigation",
+        "webRequest"
+      ],
+      "optional_permissions": [
+        "clipboardRead"
+      ],
+      "host_permissions": [
+        "*://*/*",
+        "<all_urls>"
+      ],
+      "content_security_policy": {
+        "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+      },
+      "contentScriptMatches": [
+        "http://*/*",
+        "https://*.bilibili.com/video/*",
+        "https://*/*",
+        "https://www.youtube.com/watch*"
+      ],
+      "identity": {
+        "name": "__MSG_extensionName__",
+        "shortName": "__MSG_extensionName__",
+        "homepage": "https://github.com/syoosch/Snag"
+      }
+    },
+    "manifest.firefox.json": {
+      "permissions": [
+        "alarms",
+        "contextMenus",
+        "declarativeNetRequest",
+        "downloads",
+        "scripting",
+        "storage",
+        "tabs",
+        "webNavigation",
+        "webRequest"
+      ],
+      "optional_permissions": [
+        "clipboardRead"
+      ],
+      "host_permissions": [
+        "*://*/*",
+        "<all_urls>"
+      ],
+      "content_security_policy": {
+        "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+      },
+      "contentScriptMatches": [
+        "http://*/*",
+        "https://*.bilibili.com/video/*",
+        "https://*/*",
+        "https://www.youtube.com/watch*"
+      ],
+      "identity": {
+        "name": "__MSG_extensionName__",
+        "shortName": "__MSG_extensionName__",
+        "homepage": "https://github.com/syoosch/Snag",
+        "geckoId": "snag@extensions.local"
+      }
+    }
+  }
+}

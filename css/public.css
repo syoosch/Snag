@@ -1,0 +1,179 @@
+@import url("brand.css");
+
+:root {
+  --background-color: var(--card);
+  --background-color-opacity: var(--overlay);
+  --background-color-two: var(--page);
+  --text-color: var(--text);
+  --text-error-color: #b52242;
+  --text2-color: var(--accent);
+  --link-color: var(--accent);
+  --optionBox-color: var(--card);
+
+  --button-color: var(--card);
+  --button-text-color: var(--accent);
+  --button-border: solid 1px var(--line);
+  --button-hover-color: var(--tint);
+  --button-active-color: var(--line);
+  --button2-color: var(--accent);
+  --button2-text-color: var(--on-accent);
+  --button2-border: solid 1px var(--accent);
+  --button2-hover-color: var(--accent-hover);
+  --button2-active-color: var(--accent-pressed);
+
+  --scrollbar-track-color: transparent;
+  --scrollbar-thumb-color: var(--accent);
+  --switch-off-color: var(--muted);
+  --switch-on-color: var(--accent);
+  --switch-round-color: var(--on-accent);
+  --input-border: solid 1px var(--muted);
+  accent-color: var(--accent);
+}
+html {
+  color: var(--text-color);
+  background: var(--background-color);
+  scrollbar-width: thin;
+}
+input,
+textarea,
+select {
+  color: var(--text-color);
+  background: var(--background-color);
+  scrollbar-width: thin;
+  border: var(--input-border);
+}
+a,
+a:link,
+a:visited {
+  color: var(--link-color);
+}
+button,
+.button,
+.button2 {
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 0 0 3px 0;
+  user-select: none;
+}
+button,
+.button {
+  background: var(--button-color);
+  border: var(--button-border);
+  color: var(--button-text-color);
+}
+button:hover,
+.button:hover {
+  background: var(--button-hover-color);
+}
+button:active,
+.button:active {
+  background: var(--button-active-color);
+}
+.button2 {
+  background: var(--button2-color);
+  border: var(--button2-border);
+  color: var(--button2-text-color);
+}
+.button2:hover {
+  background: var(--button2-hover-color);
+}
+.button2:active {
+  background: var(--button2-active-color);
+}
+button:disabled,
+.button:disabled,
+.button2:disabled,
+.disabled {
+  background-color: #ccc;
+  color: #666;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.bold {
+  font-weight: bold;
+}
+.hide {
+  display: none;
+}
+.textColor {
+  color: var(--text2-color);
+}
+.width100 {
+  width: 100%;
+}
+.height100 {
+  height: 100%;
+}
+.line {
+  border-top: solid 1px rgb(0 0 0 / 50%);
+  margin: 10px 0 10px 0;
+}
+.no-drop {
+  background-color: #ccc !important;
+  cursor: no-drop;
+  color: var(--button2-text-color);
+}
+.icon {
+  -webkit-user-drag: none;
+}
+/*定义整个滚动条高宽及背景：高宽分别对应横竖滚动条的尺寸*/
+::-webkit-scrollbar {
+  width: 5px;
+}
+/*定义滚动条轨道：内阴影+圆角*/
+::-webkit-scrollbar-track {
+  background-color: var(--scrollbar-track-color);
+}
+/*定义滑块：内阴影+圆角*/
+::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background-color: var(--scrollbar-thumb-color);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text-error-color: #ff99a7;
+    --optionBox-color: var(--background-color-two);
+  }
+  img.regex {
+    content: url(../img/regex-dark.png);
+  }
+  img.copy {
+    content: url(../img/copy-dark.png);
+  }
+  img.parsing {
+    content: url(../img/parsing-dark.png);
+  }
+  img.play {
+    content: url(../img/play-dark.png);
+  }
+  img.download {
+    content: url(../img/download-dark.svg);
+  }
+  img.qrcode {
+    content: url(../img/qrcode-dark.png);
+  }
+  img.aria2 {
+    content: url(../img/aria2-dark.png);
+  }
+  img.invoke {
+    content: url(../img/invoke-dark.svg);
+  }
+  img.send {
+    content: url(../img/send-dark.svg);
+  }
+  img.delete {
+    content: url(../img/delete-dark.svg);
+  }
+  img.mqtt {
+    content: url(../img/mqtt-dark.svg);
+  }
+  img.send2ffmpeg {
+    content: url(../img/send2ffmpeg-dark.svg);
+  }
+  img.stop {
+    content: url(../img/stop-dark.svg);
+  }
+  img.retry {
+    content: url(../img/retry-dark.svg);
+  }
+}

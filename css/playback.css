@@ -1,0 +1,41 @@
+* { box-sizing:border-box }
+[hidden] { display:none!important }
+body { margin:0; font-size:15px; line-height:1.5 }
+main { width:min(100%,660px); margin:clamp(16px,7vh,60px) auto; padding:0 clamp(14px,4vw,30px); display:grid; gap:16px }
+header,.transport,.actions,.toggles,.tool-links,#custom-rate,.inline { display:flex; align-items:center; flex-wrap:wrap; gap:10px }
+header { justify-content:space-between }
+h1,h2,p { margin:0 }
+h1 { display:flex; align-items:center; gap:10px; font-size:clamp(19px,4vw,26px) }
+h1 img { width:30px; height:30px }
+h2 { font-size:18px; line-height:1.4; overflow-wrap:anywhere }
+button,select,input { font:inherit; accent-color:var(--accent) }
+button,select,#rate-value { border:1px solid var(--line); border-radius:8px; padding:6px 10px; color:var(--text); background:var(--card) }
+button,select,summary,.toggles label { cursor:pointer }
+button:hover,summary:hover,a:hover { color:var(--accent); background:var(--tint) }
+button.primary { background:var(--accent); color:var(--on-accent); border-color:transparent; padding-inline:24px; font-weight:650 }
+button.primary:hover { background:var(--accent-hover) }
+section,details { padding:clamp(14px,3vw,22px); border:1px solid var(--line); border-radius:14px; background:var(--card) }
+#empty-player p { margin-top:8px; color:var(--muted) }
+#source-field,#player-picker,#player { display:grid; gap:6px; min-width:0 }
+#player { gap:16px }
+#source-field label,#player-picker label,.inline,.range-row,.toggles { font-size:14px }
+select { min-width:0; max-width:100%; text-overflow:ellipsis }
+.range-row { display:grid; grid-template-columns:1fr auto; align-items:center; gap:4px }
+.range-row input { grid-column:1/-1; width:100%; margin:0; min-height:24px }
+output { color:var(--muted); font-variant-numeric:tabular-nums }
+#rate-value { width:6em }
+.toggles { gap:20px }
+.toggles label { display:inline-flex; align-items:center; gap:5px }
+.toggles input { width:16px; height:16px; margin:0 }
+.actions { padding-top:12px; border-top:1px solid var(--line) }
+#playback-status:empty { display:none }
+#playback-status { color:var(--muted) }
+details { padding:12px 16px }
+summary,a,#find-players,#settings-link { color:var(--accent) }
+.tool-links { padding-top:12px }
+a { text-decoration:none; padding:4px }
+#settings-link { justify-self:start }
+body.embedded main { margin:0 auto; padding:8px 12px 16px; gap:12px }
+body.embedded h1 { font-size:18px }
+body.embedded h1 img { display:none }
+#local-ffmpeg {width:100%;min-height:190px;border:0;margin-top:8px}

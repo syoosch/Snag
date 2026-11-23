@@ -1,0 +1,963 @@
+{
+  "openSidebar": {
+    "message": "Kenar çubuğunu aç"
+  },
+  "welcomeGuide": {
+    "message": "Kullanım kılavuzu"
+  },
+  "extensionName": {
+    "message": "Snag"
+  },
+  "description": {
+    "message": "Bir web sayfasındaki videoları, görselleri, sesleri ve dosyaları kenar çubuğunda önizleyin ve kaydedin."
+  },
+  "confirm": {
+    "message": "Onayla"
+  },
+  "currentPage": {
+    "message": "Mevcut Sayfa"
+  },
+  "otherPage": {
+    "message": "Diğer Sayfa"
+  },
+  "mediaControl": {
+    "message": "Medya Kontrolü"
+  },
+  "loadingData": {
+    "message": "Veriler Yükleniyor..."
+  },
+  "selectWebpage": {
+    "message": "Web Sayfası:"
+  },
+  "play": {
+    "message": "Oynat"
+  },
+  "pictureInPicture": {
+    "message": "Resimde Resim"
+  },
+  "fullscreen": {
+    "message": "Tam Ekran"
+  },
+  "screenshot": {
+    "message": "Ekran Görüntüsü"
+  },
+  "loop": {
+    "message": "Döngü"
+  },
+  "mute": {
+    "message": "Sessize Al"
+  },
+  "volume": {
+    "message": "Ses Düzeyi"
+  },
+  "downloader": {
+    "message": "İndirici"
+  },
+  "parser": {
+    "message": "Ayrıştırıcı"
+  },
+  "m3u8Parser": {
+    "message": "M3U8 Ayrıştırıcısı"
+  },
+  "mpdParser": {
+    "message": "MPD Ayrıştırıcısı"
+  },
+  "jsonFormatter": {
+    "message": "JSON Biçimlendirici"
+  },
+  "expandAll": {
+    "message": "Tümünü Genişlet"
+  },
+  "expandPlayable": {
+    "message": "Oynatılabilir Olanları Genişlet"
+  },
+  "expandSelected": {
+    "message": "Seçilenleri Genişlet"
+  },
+  "collapseAll": {
+    "message": "Tümünü Daralt"
+  },
+  "videoRecording": {
+    "message": "Video Kaydı"
+  },
+  "closeRecording": {
+    "message": "Kaydı Kapat"
+  },
+  "recordWebRTC": {
+    "message": "WebRTC Kaydet"
+  },
+  "screenCapture": {
+    "message": "Ekran Yakalama"
+  },
+  "simulateMobile": {
+    "message": "Mobil Cihazı Simüle Et"
+  },
+  "autoDownload": {
+    "message": "Otomatik İndir"
+  },
+  "mergeMedia": {
+    "message": "Birleştir"
+  },
+  "download": {
+    "message": "İndir"
+  },
+  "copy": {
+    "message": "Kopyala"
+  },
+  "selectAll": {
+    "message": "Tümünü Seç"
+  },
+  "invertSelection": {
+    "message": "Seçimi Tersine Çevir"
+  },
+  "filter": {
+    "message": "Filtre"
+  },
+  "clear": {
+    "message": "Temizle"
+  },
+  "deepSearch": {
+    "message": "Ara"
+  },
+  "closeSearch": {
+    "message": "Aramayı Kapat"
+  },
+  "cacheCapture": {
+    "message": "Yakala"
+  },
+  "closeCapture": {
+    "message": "Yakalamayı Kapat"
+  },
+  "moreFeatures": {
+    "message": "Daha Fazla"
+  },
+  "pause": {
+    "message": "Duraklat"
+  },
+  "settings": {
+    "message": "Ayarlar"
+  },
+  "closeSimulation": {
+    "message": "Simülasyonu Kapat"
+  },
+  "closeDownload": {
+    "message": "İndirmeyi Kapat"
+  },
+  "enable": {
+    "message": "Etkinleştir"
+  },
+  "disable": {
+    "message": "Devre Dışı Bırak"
+  },
+  "noData": {
+    "message": "Balık Yok"
+  },
+  "regularFilterPlaceholder": {
+    "message": "Düzenli ifade filtresi, kaynak URL ile eşleş, onaylamak için Enter tuşuna bas"
+  },
+  "option": {
+    "message": "Seçenek"
+  },
+  "titleOption": {
+    "message": "Snag Seçeneği"
+  },
+  "titleDownload": {
+    "message": "Snag İndir"
+  },
+  "titleM3U8": {
+    "message": "Snag m3u8 Ayrıştırıcısı"
+  },
+  "titleJson": {
+    "message": "Snag json biçimlendirici"
+  },
+  "titledash": {
+    "message": "Snag Dash Ayrıştırıcısı"
+  },
+  "suffix": {
+    "message": "Eki"
+  },
+  "suffixTip": {
+    "message": "'.' içermeyen eki doldurun, boyut filtrelemeye gerek yoksa 0 doldurun."
+  },
+  "filterSize": {
+    "message": "Boyut Filtresi"
+  },
+  "delete": {
+    "message": "Sil"
+  },
+  "addSuffix": {
+    "message": "Ek Ekle"
+  },
+  "extension": {
+    "message": "Uzantı"
+  },
+  "disableAll": {
+    "message": "Tümünü Devre Dışı Bırak"
+  },
+  "enableAll": {
+    "message": "Tümünü Etkinleştir"
+  },
+  "type": {
+    "message": "Tür"
+  },
+  "addType": {
+    "message": "Tür Ekle"
+  },
+  "typeTip": {
+    "message": "Doğru içerik türünü girin, boyut filtrelemeye gerek yoksa 0 doldurun."
+  },
+  "addTypeError": {
+    "message": "Yakalama türünün biçimi yanlış, lütfen kontrol edin"
+  },
+  "regexMatch": {
+    "message": "Düzenli İfade Eşleşmesi"
+  },
+  "blockResource": {
+    "message": "Kaynağı Engelle"
+  },
+  "alert": {
+    "message": "Uyarı"
+  },
+  "regexExpression": {
+    "message": "Düzenli İfade"
+  },
+  "addRegex": {
+    "message": "Düzenli İfade Ekle"
+  },
+  "regexTest": {
+    "message": "Düzenli ifade testi"
+  },
+  "regex": {
+    "message": "düzenli ifade"
+  },
+  "flag": {
+    "message": "Bayrak"
+  },
+  "result": {
+    "message": "Sonuç"
+  },
+  "match": {
+    "message": "Eşleş"
+  },
+  "noMatch": {
+    "message": "Eşleşme Yok"
+  },
+  "blockResourceTip": {
+    "message": "Görünmesini istemediğiniz kaynakları engelleyin"
+  },
+  "regexSuffixTip": {
+    "message": "Elde edilen URL'ye bir ek atayın. Boş bırakılabilir ve ek otomatik olarak kesilecektir (birçok dosyanın eki yoktur)"
+  },
+  "regexTip": {
+    "message": "Düzenli ifadeler çok kaynak tüketir, gerekmedikçe dikkatli kullanın"
+  },
+  "copyTip": {
+    "message": "Üçüncü taraf uygulamalar kullanmanın kolaylığı için, kopya düğmesi tarafından panoya yazılan içeriği özelleştirin"
+  },
+  "replaceKeywordList": {
+    "message": "Anahtar Kelime Listesini Değiştir"
+  },
+  "otherFiles": {
+    "message": "Diğer Dosyalar"
+  },
+  "autoSetRefererCookieParams": {
+    "message": "Referrer ve Cookie Parametrelerini Otomatik Ayarla"
+  },
+  "secretKey": {
+    "message": "Gizli Anahtar"
+  },
+  "address": {
+    "message": "Adres"
+  },
+  "aria2Tip": {
+    "message": "Mükemmel bir indirme aracı, kullanımı öğrenin"
+  },
+  "m3u8DLTips": {
+    "message": "Mükemmel bir üçüncü taraf m3u8 ve mpd indirme aracı, kullanımı öğrenin"
+  },
+  "invoke": {
+    "message": "Çağır"
+  },
+  "parameter": {
+    "message": "Parametre"
+  },
+  "parameterSetting": {
+    "message": "Parametre Ayarı"
+  },
+  "test": {
+    "message": "Test"
+  },
+  "replaceTags": {
+    "message": "Etiketleri Değiştir"
+  },
+  "customSaveFileName": {
+    "message": "Özel Kaydet Dosya Adı"
+  },
+  "userAgentTip": {
+    "message": "Varsayılan olarak geçerli tarayıcının Kullanıcı Aracısı"
+  },
+  "disableInternalDownloader": {
+    "message": "Her Zaman Snag İndiriciyi Devre Dışı Bırak"
+  },
+  "autoClosePageAfterDownload": {
+    "message": "İndirmeden Sonra Sayfayı Otomatik Kapat"
+  },
+  "openDownloaderPageInBackground": {
+    "message": "İndirici Sayfasını Arka Planda Aç"
+  },
+  "downloaderTip": {
+    "message": "Kaynak indirmesi başarısız olursa, indiriciyi otomatik olarak etkinleştirerek tekrar deneyin."
+  },
+  "autoDownM3u8Tip": {
+    "message": "İndir düğmesine tıklayın ve m3u8 ayrıştırıcısını kullanarak hemen birleştirmeyi ve indirmeyi başlatın"
+  },
+  "otherSettings": {
+    "message": "Diğer Ayarlar"
+  },
+  "previewMode": {
+    "message": "Yerel oynatıcının çağrı protokolünü kullanarak video önizlemesini aç"
+  },
+  "previewModePlaceholder": {
+    "message": "Devre dışı bırakmak için boş bırakın. Varsayılan olarak video önizlemesi için açılır sayfayı kullanın"
+  },
+  "preview": {
+    "message": "Önizleme"
+  },
+  "iconOption": {
+    "message": "Web sitesi simgesini görüntüle"
+  },
+  "clearOption": {
+    "message": "Yenile, yeni bir sayfaya git ve mevcut sekmede yakalanan verileri temizle"
+  },
+  "doNotClear": {
+    "message": "Temizleme"
+  },
+  "normalClear": {
+    "message": "Normal Temizle"
+  },
+  "moreFrequent": {
+    "message": "Daha Sık"
+  },
+  "dopreview": {
+    "message": "preview"
+  },
+  "dopopup": {
+    "message": "popup"
+  },
+  "winpreview": {
+    "message": "window preview"
+  },
+  "winpopup": {
+    "message": "window popup"
+  },
+  "customCSS": {
+    "message": "Özel CSS"
+  },
+  "MQTT": {
+    "message": "MQTT"
+  },
+  "mqttBroker": {
+    "message": "Broker adresi"
+  },
+  "mqttPath": {
+    "message": "Yol"
+  },
+  "mqttProtocol": {
+    "message": "Protokol"
+  },
+  "mqttClientId": {
+    "message": "İstemci Kimliği"
+  },
+  "mqttTitleLength": {
+    "message": "Başlık Maksimum Uzunluğu"
+  },
+  "mqttUsername": {
+    "message": "Kullanıcı Adı"
+  },
+  "mqttPassword": {
+    "message": "Şifre"
+  },
+  "mqttTopic": {
+    "message": "Başlık"
+  },
+  "mqttQos": {
+    "message": "QoS Düzeyi"
+  },
+  "mqttQos0": {
+    "message": "0(En çok bir kez)"
+  },
+  "mqttQos1": {
+    "message": "1(En az bir kez)"
+  },
+  "mqttQos2": {
+    "message": "2(Tam olarak bir kez)"
+  },
+  "mqttDataFormat": {
+    "message": "Veri Biçimi"
+  },
+  "mqttDataFormatHelp": {
+    "message": "{\"url\": \"$${url}\", \"title\": \"$${title}\", \"type\": \"$${type}\", \"ext\": \"$${ext}\", \"timestamp\": \"$${timestamp}\"}"
+  },
+  "mqttDataFormatDefault": {
+    "message": "Varsayılan JSON biçimini kullanmak için boş bırakın"
+  },
+  "mqttProtocolWss": {
+    "message": "WSS (Güvenli)"
+  },
+  "mqttProtocolWs": {
+    "message": "WS (Güvensiz)"
+  },
+  "mqttTitleLengthHelp": {
+    "message": "MQTT iletilerine gönderilecek başlığın maksimum uzunluğu"
+  },
+  "mqttBrokerHelp": {
+    "message": "MQTT broker'ının ana bilgisayar adı veya IP adresi"
+  },
+  "mqttPathHelp": {
+    "message": "WebSocket yolu (genellikle /mqtt veya /ws)"
+  },
+  "mqttClientIdHelp": {
+    "message": "Bu bağlantı için benzersiz istemci tanımlayıcı"
+  },
+  "mqttTopicHelp": {
+    "message": "İletileri yayınlanacak MQTT başlığı"
+  },
+  "mqttQosHelp": {
+    "message": "Hizmet Kalitesi düzeyi (0=En çok bir kez, 1=En az bir kez, 2=Tam olarak bir kez)"
+  },
+  "mqttCredentialsHelp": {
+    "message": "Gerekli değilse kullanıcı adı/şifre boş bırakın"
+  },
+  "operation": {
+    "message": "İşlem"
+  },
+  "exportSettings": {
+    "message": "Ayarları Dışarı Aktar"
+  },
+  "importConfiguration": {
+    "message": "Yapılandırmayı İçeri Aktar"
+  },
+  "clearCapturedData": {
+    "message": "Yakalanan Verileri Temizle"
+  },
+  "resetSettings": {
+    "message": "Ayarları Sıfırla"
+  },
+  "resetAllSettings": {
+    "message": "Tüm Ayarları Sıfırla"
+  },
+  "restartExtension": {
+    "message": "Uzantıyı Yeniden Başlat"
+  },
+  "about": {
+    "message": "Hakkında"
+  },
+  "confirmReset": {
+    "message": "Sıfırlamak istediğinizden emin misiniz?"
+  },
+  "invokeProtocolTemplate": {
+    "message": "Protokol Şablonunu Çağır"
+  },
+  "customVLCProtocol": {
+    "message": "Özel VLC Protokolü"
+  },
+  "systemShare": {
+    "message": "Sistem Paylaşımı"
+  },
+  "default": {
+    "message": "Varsayılan"
+  },
+  "openDir": {
+    "message": "Dizini Aç"
+  },
+  "downloadDir": {
+    "message": "İndirme Dizini"
+  },
+  "sendFfmpeg": {
+    "message": "Yerel FFmpeg ile işle"
+  },
+  "autoCloserDownload": {
+    "message": "İndirmeden Sonra Sayfayı Otomatik Kapat"
+  },
+  "m3u8Placeholder": {
+    "message": "m3u8 bağlantısını / m3u8 içeriğini / segment listesini / $${range} etiketini girin"
+  },
+  "m3u8Url": {
+    "message": "m3u8 URL'si"
+  },
+  "nextLevelTip": {
+    "message": "Bu M3U8 dosyası birden fazla M3U8 dosyasını iç içe yerleştirir."
+  },
+  "multipleAudiosTip": {
+    "message": "Bu M3U8 dosyası birden fazla ses kaydını iç içe yerleştirir"
+  },
+  "multipleSubtitles": {
+    "message": "Birden Fazla Altyazı"
+  },
+  "multipleSubtitlesTip": {
+    "message": "Bu M3U8 dosyası birden fazla altyazı içeriyor."
+  },
+  "possibleKey": {
+    "message": "Olası anahtarlar bulundu"
+  },
+  "loading": {
+    "message": "Yükleniyor..."
+  },
+  "waitDownload": {
+    "message": "İndirme bekleniyor..."
+  },
+  "downloadSegmentList": {
+    "message": "Liste İndir"
+  },
+  "originalM3u8": {
+    "message": "Orijinal M3U8"
+  },
+  "segmentList": {
+    "message": "Parçalar"
+  },
+  "getParameters": {
+    "message": "GET Parametreleri"
+  },
+  "restoreGetParameters": {
+    "message": "GET Parametrelerini Geri Yükle"
+  },
+  "requestHeaders": {
+    "message": "İstek Başlıkları"
+  },
+  "setRequestHeaders": {
+    "message": "İstek başlıklarını ayarlayın."
+  },
+  "invokeM3u8DL": {
+    "message": "M3U8DL'yi Çağır"
+  },
+  "previewCommand": {
+    "message": "Komutu Önizle"
+  },
+  "addSettingParameters": {
+    "message": "Ayar Parametreleri Ekle"
+  },
+  "customKeyPlaceholder": {
+    "message": "Hexadecimal veya base64'te anahtarı özelleştirin veya anahtar adresini yazın"
+  },
+  "uploadKey": {
+    "message": "Anahtarı Yükle"
+  },
+  "downloadThreads": {
+    "message": "İş Parçacığı"
+  },
+  "ffmpegTranscoding": {
+    "message": "FFmpeg kod çözme"
+  },
+  "mp4Format": {
+    "message": "MP4"
+  },
+  "writeDirectlyToFile": { "message": "Doğrudan seçilen dosyaya yaz" },
+  "downloadWhileSaving": {
+    "message": "Akış indirmesi"
+  },
+  "audioOnly": {
+    "message": "Yalnız Ses"
+  },
+  "saveAs": {
+    "message": "Farklı Kaydet"
+  },
+  "skipDecryption": {
+    "message": "Şifre Çözmeyi Atla"
+  },
+  "downloadRange": {
+    "message": "İndirme Aralığı"
+  },
+  "recordLive": {
+    "message": "Kayıt"
+  },
+  "mergeDownloads": {
+    "message": "İndirmeleri Birleştir"
+  },
+  "redownloadFailedItems": {
+    "message": "Başarısız Öğeleri Yeniden İndir"
+  },
+  "downloadExistingData": {
+    "message": "Mevcut Verileri İndir"
+  },
+  "stopDownload": {
+    "message": "İndirmeyi Durdur"
+  },
+  "start": {
+    "message": "Başla"
+  },
+  "end": {
+    "message": "Son"
+  },
+  "resolution": {
+    "message": "Çözünürlük"
+  },
+  "duration": {
+    "message": "Süre"
+  },
+  "bitrate": {
+    "message": "Bit Hızı"
+  },
+  "ADTSerror": {
+    "message": "ADTS başlığı bulunamıyor. AES-128-ECB şifreli kaynak olabilir, şu anda şifre çözme desteklenmiyor. Lütfen üçüncü taraf birleştirme yazılımını kullanın."
+  },
+  "m3u8Error": {
+    "message": "M3U8 dosyasını ayrıştırırken veya oynatırken hata var, ayrıntılı hata bilgileri için konsolu kontrol edin"
+  },
+  "noAudio": {
+    "message": "Ses Yok"
+  },
+  "noVideo": {
+    "message": "Video Yok"
+  },
+  "hevcTip": {
+    "message": "HEVC/H.265 parçaları için yerleşik FFmpeg kullanılabilir."
+  },
+  "m3u8Info": {
+    "message": "Toplam $num$ dosya, toplam süre $time$.",
+    "placeholders": {
+      "num": {
+        "content": "$1"
+      },
+      "time": {
+        "content": "$2"
+      }
+    }
+  },
+  "encryptedHLS": {
+    "message": "Şifreli HLS"
+  },
+  "encryptedSAMPLE": {
+    "message": "SAMPLE-AES-CTR ile şifrelenmiş kaynaklar şu anda işlenemiyor."
+  },
+  "liveHLS": {
+    "message": "Canlı HLS"
+  },
+  "keyAddress": {
+    "message": "Anahtar Adresi"
+  },
+  "key": {
+    "message": "Anahtar"
+  },
+  "encryptionAlgorithm": {
+    "message": "Yöntem"
+  },
+  "keyDownloadFailed": {
+    "message": "Anahtar İndirmesi Başarısız Oldu"
+  },
+  "close": {
+    "message": "Kapat"
+  },
+  "blobM3u8DLError": {
+    "message": "Blob URL'leri M3U8DL indirmesini çağıramaz"
+  },
+  "M3U8DLparameterLong": {
+    "message": "M3U8DL parametresi çok uzun."
+  },
+  "runningCannotChangeSettings": {
+    "message": "Çalışıyor, Ayarlar Değiştirilemez"
+  },
+  "streamSaverTip": {
+    "message": "Akış halinde kaydederken eşzamanlı dönüştürme, parçaları yeniden deneme ve Farklı kaydet kullanılamaz."
+  },
+  "stopRecording": {
+    "message": "Kaydı Durdur"
+  },
+  "waitingForLiveData": {
+    "message": "Canlı Veriler Bekleniyor"
+  },
+  "sNumError": {
+    "message": "Seri Numarası Hatası"
+  },
+  "startGTend": {
+    "message": "Başlama Numarası Bitiş Numarasından Büyük Olamaz"
+  },
+  "sNumMax": {
+    "message": "Seri Numarası $num$ Aşamaz",
+    "placeholders": {
+      "num": {
+        "content": "$1"
+      }
+    }
+  },
+  "incorrectKey": {
+    "message": "Yanlış Anahtar"
+  },
+  "addParameters": {
+    "message": "Parametreler Ekle"
+  },
+  "decryptionError": {
+    "message": "Şifre Çözme Hatası"
+  },
+  "downloadFailed": {
+    "message": "İndirme Başarısız Oldu"
+  },
+  "retryDownload": {
+    "message": "İndirmeyi Yeniden Dene"
+  },
+  "recordingDuration": {
+    "message": "Kayıt Süresi"
+  },
+  "downloaded": {
+    "message": "İndirildi"
+  },
+  "downloadedVideoLength": {
+    "message": "İndirilen Video Uzunluğu"
+  },
+  "downloadComplete": {
+    "message": "İndirme Tamamlandı"
+  },
+  "merging": {
+    "message": "Birleştiriliyor"
+  },
+  "fileTooLarge": {
+    "message": "Bu aracın $size$ sınırı aşıldı. Birleştirilen kaynak dosya kaydedilecek.",
+    "placeholders": {
+      "size": {
+        "content": "$1"
+      }
+    }
+  },
+  "fileTooLargeStream": {
+    "message": "$size$ değerinden büyük dosya, akış indirmeyi etkinleştir?",
+    "placeholders": {
+      "size": {
+        "content": "$1"
+      }
+    }
+  },
+  "streamOnbeforeunload": {
+    "message": "Akış devam ediyor, kapatıldıktan sonra indirme durur"
+  },
+  "fileLoading": {
+    "message": "Dosya Yükleniyor"
+  },
+  "expandAllNodes": {
+    "message": "Tüm JSON düğümlerini genişlet"
+  },
+  "collapseAllNodes": {
+    "message": "Tüm JSON düğümlerini daralt"
+  },
+  "fileRetrievalFailed": {
+    "message": "Dosya Alımı Başarısız"
+  },
+  "selectVideo": {
+    "message": "Video Seç"
+  },
+  "extractSlices": {
+    "message": "Dilimleri Çıkar"
+  },
+  "convertToM3U8": {
+    "message": "M3U8 Ayrıştırmasına Dönüştür"
+  },
+  "selectAudio": {
+    "message": "Ses Seç"
+  },
+  "audio": {
+    "message": "Ses"
+  },
+  "video": {
+    "message": "Video"
+  },
+  "DRMerror": {
+    "message": "Medyanın DRM koruması var, lütfen indirmek için üçüncü taraf araçları kullanın"
+  },
+  "regexTitle": {
+    "message": "Düzenli ifade eşleşmesi veya derin aramadan"
+  },
+  "downloadWithRequestHeader": {
+    "message": "İstek başlığı parametreleriyle indirin."
+  },
+  "m3u8Playlist": {
+    "message": "M3U8 Çalma Listesi"
+  },
+  "copiedToClipboard": {
+    "message": "Panoya Kopyalandı"
+  },
+  "hasSent": {
+    "message": "Gönderildi"
+  },
+  "sendFailed": {
+    "message": "Gönderme Başarısız Oldu"
+  },
+  "confirmDownload": {
+    "message": "Toplam $num$ dosya, indirmeyi onayla?",
+    "placeholders": {
+      "num": {
+        "content": "$1"
+      }
+    }
+  },
+  "confirmLoading": {
+    "message": "Toplam $num$ kaynak var, yüklemeyi iptal etmek istiyor musunuz?",
+    "placeholders": {
+      "num": {
+        "content": "$1"
+      }
+    }
+  },
+  "waitingForMedia": {
+    "message": "Medya dosyalarını almayı bekleniyor... Lütfen bu sayfayı kapatmayın."
+  },
+  "exit": {
+    "message": "Çık"
+  },
+  "saving": {
+    "message": "Kaydediliyor"
+  },
+  "badgeNumber": {
+    "message": "Simge rozet istemini göster"
+  },
+  "viewSlices": {
+    "message": "Tüm dilimleri ve indirme ilerleme durumunu görüntüle"
+  },
+  "send2local": {
+    "message": "Veri aktarımı"
+  },
+  "send2MQTT": {
+    "message": "MQTT'ye Gönder"
+  },
+  "sendingToMQTT": {
+    "message": "MQTT sunucusuna gönderiliyor..."
+  },
+  "connectingToMQTT": {
+    "message": "MQTT sunucusuna bağlanıyor..."
+  },
+  "sendingMessageToMQTT": {
+    "message": "MQTT sunucusuna ileti gönderiliyor..."
+  },
+  "messageSentToMQTT": {
+    "message": "İleti MQTT sunucusuna gönderildi"
+  },
+  "popup": {
+    "message": "Açılır Pencere"
+  },
+  "defaultPopup": {
+    "message": "Varsayılan Açılır Pencere Modu"
+  },
+  "invokeApp": {
+    "message": "Uygulamayı Çağır"
+  },
+  "dataFetchFailed": {
+    "message": "Veri alımı başarısız"
+  },
+  "confirmParameters": {
+    "message": "Parametreleri Onayla"
+  },
+  "searchingForRealKey": {
+    "message": "Gerçek anahtar aranıyor"
+  },
+  "verifying": {
+    "message": "Doğrulanıyor"
+  },
+  "realKeyNotFound": {
+    "message": "Gerçek anahtar bulunamadı"
+  },
+  "blockUrl": {
+    "message": "URL'yi Engelle"
+  },
+  "addUrl": {
+    "message": "URL Ekle"
+  },
+  "blockUrlTips": {
+    "message": "Joker karakterler * ve ? destekler"
+  },
+  "setWhiteList": {
+    "message": "Beyaz listeye ayarla"
+  },
+  "autoSend": {
+    "message": "Otomatik veri aktarımı"
+  },
+  "manualSend": {
+    "message": "Manuel veri aktarımı"
+  },
+  "requestMethod": {
+    "message": "İstek Yöntemi"
+  },
+  "requestBody": {
+    "message": "İstek Gövdesi"
+  },
+  "sort": {
+    "message": "Sırala"
+  },
+  "asc": {
+    "message": "Artan"
+  },
+  "desc": {
+    "message": "Azalan"
+  },
+  "getTime": {
+    "message": "Alma Zamanı"
+  },
+  "fileSize": {
+    "message": "Dosya Boyutu"
+  },
+  "title": {
+    "message": "Başlık"
+  },
+  "noKeyIsRequired": {
+    "message": "Anahtar gerekli değil"
+  },
+  "estimateSize": {
+    "message": "Tahmini boyut"
+  },
+  "retryCount": {
+    "message": "Yeniden deneme sayısı"
+  },
+  "Script": {
+    "message": "Betik"
+  },
+  "alwaysSearch": {
+    "message": "Her zaman derin aramayı etkinleştir"
+  },
+  "sideurlprotocol": {
+    "message": "m3u8dl URL protokolü"
+  },
+  "deleteDuplicateFilenames": {
+    "message": "Yinelenen dosya adlarını sil"
+  },
+  "alertimport": {
+    "message": "İçe aktarma tamamlandı"
+  },
+  "isBlockedSite": {
+    "message": "Bu site, bu uzantının çalıştırılmasını engellemenizi gerektirir"
+  },
+  "localFFmpeg": {
+    "message": "Yerel FFmpeg"
+  },
+  "ffmpegIsNotReady": {
+    "message": "Yerel işlem kullanılamıyor."
+  },
+  "iframeFFmpeg": {
+    "message": "FFmpeg’i geçerli araçta göster"
+  },
+  "send2localTips": {
+    "message": "Göndermeden önce verileri birleştirmek ister misiniz? Birleştirmek için 'Tamam'a, tek tek göndermek için 'İptal'e tıklayın."
+  },
+  "removeFailedPreviewFiles": {
+    "message": "Önizlenemeyen dosyaları kaldır"
+  },
+  "save": {
+    "message": "Kaydet"
+  },
+  "contextMenus": {
+    "message": "Sağ tık menüsü"
+  },
+  "dataPreprocessing": {
+    "message": "Veri ön işleme"
+  },
+  "reverse": {
+    "message": "Ters sıralama"
+  },
+  "hideDownloadedSegments": {
+    "message": "İndirilen segmentleri gizle"
+  },
+  "showGroup": {
+    "message": "Grubu Göster"
+  },
+  "groupTime": {
+    "message": "Grup Zamanı"
+  },
+  "fileName": {
+    "message": "Dosya Adı"
+  }
+}

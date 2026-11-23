@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-i18n-title="playbackTitle">播放控制</title>
+  <link rel="icon" href="img/brand.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/brand.css">
+  <link rel="stylesheet" href="css/playback.css">
+  <script defer src="js/polyfill.js"></script>
+  <script defer src="js/function.js"></script>
+  <script defer src="js/init.js"></script>
+  <script defer src="js/i18n.js"></script>
+  <script defer src="js/media-control.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <h1><img src="img/brand.svg" alt=""><span data-i18n="playbackTitle"></span></h1>
+      <button id="find-players" data-i18n="playbackFind"></button>
+    </header>
+    <div id="source-field" hidden>
+      <label for="source" data-i18n="playbackSource"></label>
+      <select id="source"></select>
+    </div>
+    <section id="empty-player" aria-live="polite">
+      <h2 id="empty-title" data-i18n="loading"></h2>
+      <p id="empty-help"></p>
+    </section>
+    <section id="player" hidden>
+      <div id="player-picker" hidden>
+        <label for="player-list" data-i18n="playbackChoose"></label>
+        <select id="player-list"></select>
+      </div>
+      <h2 id="player-name"></h2>
+      <div class="transport">
+        <button id="play" class="primary"></button>
+        <label class="inline" for="rate"><span data-i18n="playbackSpeed"></span>
+          <select id="rate"><option>0.5×</option><option>0.75×</option><option>1×</option><option>1.25×</option><option>1.5×</option><option>2×</option><option>3×</option><option>4×</option><option>8×</option><option>16×</option><option value="custom" data-i18n="playbackCustom"></option></select>
+        </label>
+      </div>
+      <form id="custom-rate" hidden>
+        <label for="rate-value" data-i18n="playbackSpeed"></label>
+        <input id="rate-value" type="number" min="0" step="any" required aria-describedby="playback-status">
+        <button data-i18n="playbackApply"></button>
+      </form>
+      <div class="range-row">
+        <label for="seek" data-i18n="playbackPosition"></label><output id="clock" for="seek"></output>
+        <input id="seek" type="range" min="0" max="100" step="0.1">
+      </div>
+      <div class="range-row">
+        <label for="volume" data-i18n="volume"></label><output id="volume-value" for="volume"></output>
+        <input id="volume" type="range" min="0" max="100">
+      </div>
+      <div class="toggles">
+        <label><input id="muted" type="checkbox"><span data-i18n="mute"></span></label>
+        <label><input id="loop" type="checkbox"><span data-i18n="loop"></span></label>
+      </div>
+      <div id="video-actions" class="actions">
+        <button id="pip" data-i18n="pictureInPicture"></button>
+        <button id="fullscreen" data-i18n="fullscreen"></button>
+        <button id="screenshot" data-i18n="screenshot"></button>
+      </div>
+    </section>
+    <p id="playback-status" role="status"></p>
+    <details id="utilities">
+      <summary data-i18n="playbackTools"></summary>
+      <div class="tool-links">
+        <a href="downloader.html" target="_blank" rel="noopener" data-i18n="downloader"></a>
+        <a href="m3u8.html" target="_blank" rel="noopener" data-i18n="m3u8Parser"></a>
+        <a href="mpd.html" target="_blank" rel="noopener" data-i18n="mpdParser"></a>
+        <a href="json.html" target="_blank" rel="noopener" data-i18n="jsonFormatter"></a>
+        <button id="ffmpeg" type="button" aria-expanded="false" aria-controls="local-ffmpeg">FFmpeg</button>
+      </div>
+      <iframe id="local-ffmpeg" title="FFmpeg" hidden></iframe>
+    </details>
+    <button id="settings-link" data-i18n="settings" hidden></button>
+  </main>
+</body>
+</html>

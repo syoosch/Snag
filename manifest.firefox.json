@@ -1,0 +1,124 @@
+{
+  "background": {
+    "scripts": [
+      "js/polyfill.js",
+      "js/function.js",
+      "js/templates.js",
+      "js/init.js",
+      "js/media-bridge.js",
+      "js/local-stream.js",
+      "js/background.js"
+    ]
+  },
+  "action": {
+    "default_icon": "img/icon.png",
+    "default_title": "__MSG_extensionName__",
+    "default_popup": "popup.html"
+  },
+  "sidebar_action": {
+    "default_panel": "sidebar.html",
+    "default_icon": "img/brand.svg",
+    "default_title": "__MSG_extensionName__",
+    "open_at_install": false
+  },
+  "description": "__MSG_description__",
+  "homepage_url": "https://github.com/syoosch/Snag",
+  "icons": {
+    "16": "/img/icon16.png",
+    "32": "/img/icon32.png",
+    "64": "/img/icon.png",
+    "128": "/img/icon128.png"
+  },
+  "manifest_version": 3,
+  "name": "__MSG_extensionName__",
+  "short_name": "__MSG_extensionName__",
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "permissions": [
+    "tabs",
+    "webRequest",
+    "downloads",
+    "storage",
+    "webNavigation",
+    "alarms",
+    "scripting",
+    "declarativeNetRequest",
+    "contextMenus"
+  ],
+  "optional_permissions": [
+    "clipboardRead"
+  ],
+  "commands": {
+    "_execute_browser_action": {},
+    "enable": {
+      "description": "__MSG_pause__ / __MSG_enable__"
+    },
+    "auto_down": {
+      "description": "__MSG_autoDownload__"
+    },
+    "catch": {
+      "description": "__MSG_cacheCapture__"
+    },
+    "m3u8": {
+      "description": "__MSG_m3u8Parser__"
+    },
+    "clear": {
+      "description": "__MSG_clear__"
+    },
+    "reboot": {
+      "description": "__MSG_restartExtension__"
+    },
+    "deepSearch": {
+      "description": "__MSG_deepSearch__"
+    },
+    "preview": {
+      "description": "__MSG_preview__"
+    }
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "snag@extensions.local",
+      "strict_min_version": "113.0"
+    }
+  },
+  "host_permissions": [
+    "*://*/*",
+    "<all_urls>"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*/*",
+        "http://*/*"
+      ],
+      "js": [
+        "js/content-script.js",
+        "js/sidebar-bili.js",
+        "js/media-formats.js",
+        "js/sidebar-player.js",
+        "js/sidebar-page.js"
+      ],
+      "all_frames": true,
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://*.bilibili.com/video/*"],
+      "js": ["js/bili-playback.js"],
+      "world": "MAIN",
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://www.youtube.com/watch*"],
+      "js": ["js/youtube-buffer.js"],
+      "world": "MAIN",
+      "run_at": "document_start"
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
+  "default_locale": "en",
+  "version": "1.0.2"
+}
