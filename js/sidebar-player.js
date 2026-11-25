@@ -88,14 +88,11 @@ globalThis.SnagPlayer = {
         return this.isYouTubeMedia(url) && ((record.method && record.method !== "GET") ||
             /(?:yt-ump|sabr)/i.test(record.type || "") || ["range","sq","ump","sabr"].some(key => url.searchParams.has(key)));
     },
-    async manifestVariants(source,signal) {
+    async playlistText(response) {
         const limit = 2 * 1024 * 1024;
-        const url = new URL(source.url);
-        if (url.protocol !== 'https:' || !/(^|\.)googlevideo\.com$/.test(url.hostname) || url.username || url.password) return [];
-        const response = await fetch(url,{signal,credentials:'omit',redirect:'error',referrerPolicy:'no-referrer'});
         if (!response.ok || !response.body || Number(response.headers.get('content-length')) > limit) {
             await response.body?.cancel();
-            return [];
+            return '';
         }
         const reader = response.body.getReader(), decoder = new TextDecoder();
         let text = '', length = 0;
@@ -104,10 +101,17 @@ globalThis.SnagPlayer = {
                 const {done,value} = await reader.read();
                 if (done) break;
                 length += value.length;
-                if (length > limit) return [];
+                if (length > limit) return '';
                 text += decoder.decode(value,{stream:true});
             }
-            return MediaSources.videoVariants(text+decoder.decode(),source).slice(0,256);
+            return text+decoder.decode();
         } finally { await reader.cancel().catch(()=>{}); }
+    },
+    async manifestVariants(source,signal) {
+        const url = new URL(source.url);
+        if (url.protocol !== 'https:' || !/(^|\.)googlevideo\.com$/.test(url.hostname) || url.username || url.password) return [];
+        const response = await fetch(url,{signal,credentials:'omit',redirect:'error',referrerPolicy:'no-referrer'});
+        const text = await this.playlistText(response);
+        return text ? MediaSources.videoVariants(text,source).slice(0,256) : [];
     }
 };

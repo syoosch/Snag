@@ -18,7 +18,10 @@ function trackAmount(track,duration) {
 
 function trackSizeLabel(track,duration) {
     if (track.segments) return segmentSize(track,duration).text;
-    if (isM3U8(track.record) || isMPD(track.record)) return "";
+    if (isM3U8(track.record) || isMPD(track.record)) {
+        const size = Math.round(track.bitrate * (track.duration || duration) / 8);
+        return Number.isSafeInteger(size) && size > 0 ? i18n("sideEstimatedSize",bytes(size)) : "";
+    }
     const amount = trackAmount(track,duration);
     return !amount ? "" : amount.estimated ? i18n("sideEstimatedSize",bytes(amount.value)) : bytes(amount.value);
 }
@@ -83,7 +86,7 @@ function cardMetadata(group,track,duration,split) {
         }
     } else {
         size = trackSizeLabel(track,duration);
-        if (split) sizeLabel = i18n.sidePictureSize;
+        if (split || track.pictureOnly) sizeLabel = i18n.sidePictureSize;
     }
     if (saved) {
         if (saved.ext) { format = saved.ext.toUpperCase(); formatLabel = i18n.sideSavedFormat; }

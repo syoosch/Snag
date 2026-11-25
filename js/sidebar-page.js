@@ -21,7 +21,7 @@
     }
 
     function webUrl(value, allowBlob = false) {
-        if (!value) return "";
+        if (typeof value !== "string" || !value.trim()) return "";
         try {
             const url = new URL(value, document.baseURI);
             return /^(https?:)$/.test(url.protocol) || (allowBlob && url.protocol === "blob:") ? url.href : "";
@@ -103,13 +103,13 @@
         const tag = node.localName;
         if (tag === "a" && !node.hasAttribute("download") && !/\.pdf(?:[?#]|$)/i.test(node.href)) return;
         const kind = { img: "image", a: "other" }[tag] || tag;
-        const current = node.srcObject ? "" : webUrl(node.currentSrc || node.src || node.href, true);
+        const current = node.srcObject ? "" : webUrl(node.currentSrc || node.getAttribute("src") || node.getAttribute("href"), true);
         const sources = current ? [{ url: current, label: "" }] : [];
         if (tag === "video" || tag === "audio") {
             // An assigned src or srcObject takes precedence over <source> children left over from the ad.
             if (!node.srcObject && !node.hasAttribute("src")) {
                 for (const source of node.querySelectorAll(":scope > source[src]")) {
-                    const url = webUrl(source.src);
+                    const url = webUrl(source.getAttribute("src"));
                     if (url) sources.push({url, htmlSource:true, label:(source.getAttribute("label") || source.dataset.quality || "").slice(0,48),
                         type:source.type.split(";")[0].trim().toLowerCase(),codec:SnagPlayer.codecName(source.type)});
                 }
@@ -135,6 +135,10 @@
         }
         const title = node.getAttribute("aria-label") || (captionId && document.getElementById(captionId)?.textContent) || node.title || node.alt ||
             figure?.querySelector("figcaption")?.textContent || (tag === "a" ? node.textContent : "");
+        const container = tag === "video" && node.closest('[id^="playerDiv_"],[data-video-id]');
+        const streamId = container && (/^playerDiv_(\d+)$/.exec(container.id)?.[1] || container.dataset.videoId);
+        const currentSlot = tag === "video" && node.matches(".dplayer-video") &&
+            node.parentElement?.querySelector(":scope > video.dplayer-video-current");
         return {
             id: nodeIds.get(node), kind, sources, current, biliMain:tag === "video" && mainPlayer(node),
             page: tag === "video" ? location.href.split("#")[0] : undefined,
@@ -142,6 +146,9 @@
             stream: tag === "video" && (!current || current.startsWith("blob:") || !!node.srcObject) &&
                 (!node.paused || node.getClientRects().length > 0),
             protectedMedia: !!node.mediaKeys,
+            streamId: /^\d{1,20}$/.test(streamId) ? streamId : undefined,
+            inactiveSlot: !!currentSlot && currentSlot !== node,
+            objectStream: !!globalThis.MediaStream && node.srcObject instanceof MediaStream,
             youtubeId, ad: !!youtubeId && ad, qualitySetting, menuQualities,
             loaded: tag === "a" || (tag === "img" ? node.complete && node.naturalWidth > 0 : node.readyState >= 1),
             title: (title || "").trim().slice(0, 160),
@@ -229,6 +236,9 @@
         const pickedInShadow = new Set();
         const filePreviews = new Map();
         const manifests = new Map();
+        const segmentSamples = new Set(), observedSlots = new WeakSet();
+        const slotObserver = new MutationObserver(queue);
+        let watchingStream = false;
         let watchedPlayer, watchedMenu, menuVideoId, menuQualities = [], watchRevision = 0;
         const menuObserver = new MutationObserver(queue);
         let pending, hideTimer, outline, highlighted, previewCanvas, audioRoot, previous = "", picking = false;
@@ -304,10 +314,15 @@
             for (const node of all) {
                 const item = describe(node);
                 if (!item) continue;
+                if (node.matches("video.dplayer-video") && !observedSlots.has(node)) {
+                    observedSlots.add(node);
+                    slotObserver.observe(node,{attributes:true,attributeFilter:["class"]});
+                }
                 nodes.set(item.id, node);
                 list.push(item);
             }
             const videos = list.filter(item => item.kind === "video");
+            watchingStream = !playbackRoute(location.href) && videos.some(item => item.stream && !item.objectStream && !item.protectedMedia);
             const primary = videos.find(item => item.youtubeId);
             if (primary?.ad || primary?.youtubeId !== menuVideoId) {
                 menuVideoId = primary?.youtubeId;
@@ -318,7 +333,8 @@
                 else primary.menuQualities = menuQualities;
             }
             if (primary && !primary.title) primary.title = document.title.replace(/\s+[-–]\s+YouTube$/i,"").slice(0,160);
-            if (videos.length === 1 && !videos[0].title) videos[0].title = document.title.slice(0,160);
+            const currentVideos = videos.filter(v => !v.inactiveSlot);
+            if (currentVideos.length === 1 && !currentVideos[0].title) currentVideos[0].title = document.title.slice(0,160);
             const host = primary && nodes.get(primary.id)?.closest("#movie_player");
             if (host !== watchedPlayer) {
                 adObserver.disconnect();
@@ -336,10 +352,11 @@
             }
             const info = pageInfo();
             const playlists = [...manifests.values()];
-            const signature = JSON.stringify([list,info,playlists,watchRevision]);
+            const segments = watchingStream ? [...segmentSamples] : [];
+            const signature = JSON.stringify([list,info,playlists,segments,watchRevision]);
             if (signature !== previous) {
                 previous = signature;
-                port.postMessage({ type: "elements", list, info, playlists, watchRevision });
+                port.postMessage({type:"elements",list,info,playlists,segments,watchRevision,documentStart:performance.timeOrigin});
             }
         }
         function queue() {
@@ -350,15 +367,25 @@
         }
         const observer = new MutationObserver(changes => {
             if (changes.some(change => change.type === "attributes"
-                ? change.target.matches(mediaSelector + ",source")
+                ? change.target.matches(mediaSelector + ",source") ||
+                    (["id","data-video-id"].includes(change.attributeName) && change.target.querySelector("video"))
                 : [...change.addedNodes, ...change.removedNodes].some(hasMedia))) queue();
         });
         observer.observe(document, { childList: true, subtree: true, attributes: true,
-            attributeFilter: ["src","srcset","sizes","href","poster","alt","title","aria-label","label","data-quality","type","download"] });
+            attributeFilter: ["src","srcset","sizes","href","poster","alt","title","aria-label","label","data-quality","type","download","id","data-video-id"] });
         function rememberLists(entries) {
             let changed = false;
+            const generic = !playbackRoute(location.href);
             for (const entry of entries) {
                 if (timingRoute && entry.startTime < routeStarted) continue;
+                if (generic && !(entry.responseStatus >= 400) && /\.(?:m4s|ts|m2ts|cmfv|cmfa)(?:[?#]|$)/i.test(entry.name)) {
+                    const url = webUrl(entry.name);
+                    if (url && /\.(?:m4s|ts|m2ts|cmfv|cmfa)$/i.test(new URL(url).pathname) && !segmentSamples.has(url)) {
+                        segmentSamples.add(url);
+                        if (segmentSamples.size > 48) segmentSamples.delete(segmentSamples.values().next().value);
+                        changed ||= watchingStream;
+                    }
+                }
                 const file = manifestFile(entry);
                 if (!file || manifests.has(file.url)) continue;
                 manifests.set(file.url,file);
@@ -438,7 +465,19 @@
         function hit(event) {
             const direct = event.composedPath().find(node => node.matches?.(mediaSelector));
             if (direct) return direct;
-            return document.elementsFromPoint(event.clientX, event.clientY).find(node => node.matches(mediaSelector));
+            const {clientX:x,clientY:y} = event;
+            const under = document.elementsFromPoint(x,y).find(node => node.matches(mediaSelector));
+            if (under) return under;
+            // A video with pointer-events:none is absent from the hit-test stack.
+            for (const parent of event.composedPath()) {
+                if (!(parent instanceof Element) || parent === document.body || parent === document.documentElement) break;
+                const videos = [...parent.querySelectorAll("video")].filter(video => {
+                    const rect = video.getBoundingClientRect();
+                    return rect.left <= x && x < rect.right && rect.top <= y && y < rect.bottom &&
+                        getComputedStyle(video).visibility === "visible";
+                });
+                if (videos.length) return videos.length === 1 ? videos[0] : undefined;
+            }
         }
         function capture(event) {
             if (!picking || !event.isTrusted) return;
@@ -467,6 +506,33 @@
         }, { capture:true, signal:life.signal });
 
         port.onMessage.addListener(message => {
+            if (message.type === "inspectPlaylist") {
+                const url = message.url;
+                const observed = manifests.has(url) || performance.getEntriesByName(url,"resource").length ||
+                    message.documentStart === performance.timeOrigin;
+                let retryable = false;
+                const read = async () => {
+                    if (!observed || !/^https?:\/\//i.test(url)) return "";
+                    const controller = new AbortController();
+                    const abort = () => controller.abort();
+                    const timer = setTimeout(abort,5000);
+                    life.signal.addEventListener("abort",abort,{once:true});
+                    try {
+                        const response = await fetch(url,{cache:"force-cache",redirect:"error",signal:controller.signal});
+                        retryable = [408,500,502,503,504].includes(response.status);
+                        return await SnagPlayer.playlistText(response);
+                    } catch {
+                        retryable = true;
+                        return "";
+                    } finally {
+                        clearTimeout(timer);
+                        life.signal.removeEventListener("abort",abort);
+                    }
+                };
+                read().catch(() => "").then(text => {
+                    if (!life.signal.aborted) port.postMessage({type:"playlistText",url,text,retryable});
+                });
+            }
             if (message.type === "videoContext") {
                 useContext(message);
                 publish();
@@ -526,6 +592,7 @@
             observer.disconnect();
             adObserver.disconnect();
             menuObserver.disconnect();
+            slotObserver.disconnect();
             playbackLists.disconnect();
             clearTimeout(listTimer);
             clearTimeout(pending);

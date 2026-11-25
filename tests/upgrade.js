@@ -113,7 +113,10 @@ async function checkUpgrade(t, coldStart) {
 
     const site = await serve((req,res) => html(res,'<title>Upgrade</title>'));
     t.defer(site.close);
-    const page = await browser.open(site.origin + '/upgrade');
+    const pageUrl = site.origin + '/upgrade';
+    const page = await browser.open(pageUrl);
+    assert.ok(await until(() => page.eval('location.href === '+JSON.stringify(pageUrl)+' && document.readyState === "complete"')),
+        'the local upgrade page committed before seeding its origin storage');
     await page.eval(`localStorage.setItem('framepickCapture_selector','#movie');
         localStorage.setItem('framepickCapture_migrated','1');
         localStorage.setItem('CatCatchCatch_ffmpeg','checked');

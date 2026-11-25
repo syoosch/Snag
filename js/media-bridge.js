@@ -1,5 +1,8 @@
 'use strict';
 
+const mediaRuleBase = 1620000000, mediaRuleCount = 1000000;
+function isMediaRuleId(id) { return id >= mediaRuleBase && id < mediaRuleBase + mediaRuleCount; }
+
 // Privileged browser calls live here. The offscreen document owns OPFS, workers
 // and blob URLs; opening or closing a sidebar never takes ownership of a file.
 (() => {
@@ -7,9 +10,9 @@
     const panelUrl = chrome.runtime.getURL('sidebar.html');
     const toolUrl = chrome.runtime.getURL('media-tool.html');
     const prefix = new URL(hostUrl).hostname;
-    const ruleBase = 1620000000, ruleCount = 1000000;
     let creating;
-    const localRule = rule => rule.id >= ruleBase && rule.id < ruleBase + ruleCount &&
+    let nextRule = 0;
+    const localRule = rule => isMediaRuleId(rule.id) &&
         rule.condition.initiatorDomains?.includes(prefix) && rule.condition.tabIds?.includes(-1);
     const send = body => chrome.runtime.sendMessage({mediaTarget:'host', ...body});
     const helperStore = chrome.storage.local;
@@ -105,7 +108,10 @@
         const rules = await chrome.declarativeNetRequest.getSessionRules();
         const used = new Set(rules.map(rule => rule.id));
         let id;
-        do { id = ruleBase + crypto.getRandomValues(new Uint32Array(1))[0] % ruleCount; } while (used.has(id));
+        do {
+            id = mediaRuleBase + nextRule;
+            nextRule = (nextRule + 1) % mediaRuleCount;
+        } while (used.has(id));
         await chrome.declarativeNetRequest.updateSessionRules({addRules:[{id,priority:2,
             condition:{urlFilter:'|' + media.href + '|',isUrlFilterCaseSensitive:true,initiatorDomains:[prefix],tabIds:[-1],resourceTypes:['xmlhttprequest']},
             action:{type:'modifyHeaders',requestHeaders:headers.map(([header,value]) => ({header,value,operation:'set'}))}
@@ -131,7 +137,7 @@
                 }
                 case 'headers': return headerRule(m.url,m.headers);
                 case 'release':
-                    if (m.id >= ruleBase && m.id < ruleBase + ruleCount)
+                    if (isMediaRuleId(m.id))
                         await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[m.id]});
                     return;
                 case 'save': {

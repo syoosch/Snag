@@ -19,7 +19,7 @@ function resourceKind(record) {
     return "other";
 }
 
-function sidebarGroups(records, frames, pickedKey, currentVideo, route, sources = []) {
+function sidebarGroups(records, frames, pickedKey, currentVideo, route, sources = [], streams = new Map()) {
     const byAddress = new Map(), byRendition = new Map();
     const metadata = new Map();
     let partGroup;
@@ -88,10 +88,16 @@ function sidebarGroups(records, frames, pickedKey, currentVideo, route, sources 
         const directEpisode = currentVideo && !representation &&
             (description?.episodeCid === currentVideo.cid || currentVideo.episodeId && main && match?.item === main);
         const info = onMainPage && (directEpisode || bili && bili.cid === currentVideo?.cid) ? currentVideo : null;
-        const point = match?.item || (info ? main : null);
+        const stream = streams.get(record);
+        if (stream?.child && !match) continue;
+        const frame = frames.get(record.frameId);
+        const entry = frame?.streamLists?.has(url) && sameStreamDocument(frame,record) && frame.streamLists.get(url);
+        const details = stream?.player ? stream : entry?.list && streamListDetails(entry.list,frame.streamLists);
+        if (entry?.unsupported || details?.unavailable) continue;
+        const point = match?.item || stream?.player || (info ? main : null);
         const kind = match?.kind || description?.kind || bili?.kind || (bili && explicitKind) ||
             (point?.kind === "other" ? null : point?.kind) || resourceKind(record);
-        const rawSegment = /^(m4s|ts|m2ts)$/i.test(record.ext) && !bili && !point;
+        const rawSegment = /^(m4s|ts|m2ts|cmfv|cmfa)$/i.test(record.ext) && !bili && !point;
         const key = info?.episodeId ? "episode:" + info.cid : bili?.key ||
             (directEpisode && info ? partGroup || "bili:" + info.cid + "-1" : point?.key || recordKey);
         if (!groups.has(key)) {
@@ -102,11 +108,29 @@ function sidebarGroups(records, frames, pickedKey, currentVideo, route, sources 
         if (info) group.info = info;
         if (kind === "video") group.kind = "video";
         const rendition = bili?.rendition;
-        const track = { record, kind, label:match?.label || description?.label || "", codec:match?.codec || description?.codec,
+        const streamKey = stream?.player && JSON.stringify([record.frameId,frame.documentId || frame.documentStart,
+            stream.player.streamId || "",MediaSources.revisionKey(url)]);
+        const track = { record, kind, streamPlaylist:!!(stream?.player || details), label:match?.label || description?.label || "", codec:match?.codec || description?.codec,
             separate:match?.separate,defaultAudio:match?.defaultAudio,
             fps:match?.fps || description?.fps, bitrate:match?.bitrate || description?.bitrate, size:match?.size || description?.size,
             qualityId:description?.qualityId || match?.qualityId, episodeCid:directEpisode ? info?.cid : undefined, rendition,
-            key:bili?.identity || (directEpisode ? url : recordKey) };
+            key:bili?.identity || (directEpisode ? url : streamKey || recordKey) };
+        const variants = details?.variants;
+        track.duration = details?.duration;
+        if (variants?.length && !bili && !directEpisode && kind === "video") {
+            const seen = new Set();
+            for (const variant of variants) {
+                const {height,fps,codec,bitrate,repId} = variant;
+                const streamQuality = {url:variant.url,repId,height,fps,codec,bitrate};
+                const key = track.key + "|" + JSON.stringify([variant.identity,height,fps,codec,bitrate]);
+                if (seen.has(key)) continue;
+                seen.add(key);
+                group.tracks.push({...track,key,streamQuality,streamPlaylist:true,streamObserved:variant.observed,observedAt:variant.observedAt,
+                    bandwidth:variant.bandwidth || bitrate,label:SnagPlayer.quality("",height,fps),codec,bitrate,fps,
+                    duration:variant.duration || track.duration,pictureOnly:variant.pictureOnly});
+            }
+            continue;
+        }
         const duplicate = bili || track.episodeCid ? group.tracks.findIndex(entry => entry.key === track.key) : -1;
         if (duplicate >= 0) {
             const prior = group.tracks[duplicate].record;
@@ -176,7 +200,7 @@ function sidebarGroups(records, frames, pickedKey, currentVideo, route, sources 
     const matched = new Set(result.filter(group => group.kind === "video").map(group => group.point?.key));
     for (const frame of frames.values()) {
         for (const item of frame.items) {
-            if (!item.stream || !item.loaded || !item.width || matched.has(item.key)) continue;
+            if (!item.stream || !item.loaded || !item.width || item.inactiveSlot || matched.has(item.key)) continue;
             result.push({key:item.key + ":player",kind:"video",point:item,playerOnly:true,tracks:[]});
         }
     }

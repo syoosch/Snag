@@ -103,7 +103,7 @@
     }
   ],
   "default_locale": "en",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
   },

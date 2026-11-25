@@ -4,6 +4,7 @@ const $id = id => document.getElementById(id);
 const types = { video:"video", image:"sideImages", audio:"audio", other:"sideOther", all:"sideAll" };
 const filterButtons = new Map();
 const records = new Map(), frames = new Map(), rows = new Map();
+const srcdocFrames = new Map();
 const selections = new Set(), choices = new Map(), downloads = new Map(), outcomes = new Map();
 const fixedTab = Number(new URLSearchParams(location.search).get("tabId")) || null;
 let tabId, windowId, generation = 0, connectionId = 0, tabQuery = 0;
@@ -38,8 +39,17 @@ function choice(group) {
     const tracks = group.tracks.filter(track => track.kind === group.kind);
     const pinned = choices.get(group.key), current = resourceAddress(group.point?.current);
     const exact = tracks.find(track => track.key === pinned) || tracks.find(track => track.key === group.info?.playingKey) ||
-        (current && tracks.find(track => resourceAddress(track.record.url) === current));
+        (current && tracks.find(track => !track.streamQuality && resourceAddress(track.record.url) === current));
     if (exact) return exact;
+    const variants = tracks.filter(track => track.streamQuality);
+    if (variants.length) {
+        const height = Math.min(group.point?.width,group.point?.height);
+        const playing = variants.filter(track => height > 0 && track.streamQuality.height === height);
+        const options = playing.length ? playing : variants;
+        options.sort((a,b) => Number(!!b.streamObserved)-Number(!!a.streamObserved) ||
+            (b.observedAt || 0)-(a.observedAt || 0) || (b.record.getTime || 0)-(a.record.getTime || 0) || (b.bandwidth || 0)-(a.bandwidth || 0));
+        return options[0];
+    }
     // The user's chosen YouTube quality can be known before the first HD frame arrives.
     if (group.point?.youtubeId && tracks.some(track => track.segments)) {
         const requested = SnagPlayer.quality(group.point.qualitySetting);
@@ -61,6 +71,8 @@ function choice(group) {
         const nearest = candidates.sort((a,b) => distance(a) - distance(b) || parseInt(a.quality,10) - parseInt(b.quality,10))[0];
         if (nearest) return nearest.track;
     }
+    if (tracks.length > 1 && tracks.every(track => track.streamPlaylist))
+        return tracks.reduce((a,b) => (a.record.getTime || 0) > (b.record.getTime || 0) ? a : b);
     return tracks[0] || group.tracks[0];
 }
 function title(group, record) {
@@ -173,7 +185,12 @@ function recordsWithPageFiles() {
     for (const [frameId, frame] of frames) {
         for (const file of [...(frame.playerFiles || []),...(frame.files || [])]) {
             const url = resourceAddress(file.url);
-            if (!url || seen.has(url)) continue;
+            if (!url) continue;
+            if (seen.has(url)) {
+                // The background de-duplicates across frames. Keep this frame's independent observation of a playlist.
+                const previous = combined.get(frameId + ":" + url);
+                if (!(isM3U8(file) || isMPD(file)) || previous && (!previous.documentId || previous.documentId === frame.documentId)) continue;
+            }
             seen.add(url);
             combined.set(frameId + ":" + url, file);
         }
@@ -350,6 +367,9 @@ async function rescan() {
         snapshot.records.forEach(addRecord);
         const ready = [...frames].filter(([,state]) => state.ready);
         const results = await Promise.allSettled(ready.map(async ([frameId,state]) => {
+            for (const [url,entry] of state.streamLists || []) {
+                if (!entry.pending && !entry.list && !entry.unsupported) state.streamLists.delete(url);
+            }
             await syncPlayerFiles(id,state,true);
             if (epoch !== generation || frames.get(frameId) !== state) return false;
             return frameId === 0 && videoRoute ? scanVideo(id,state,epoch) : scanFrame(id,frameId,state);
@@ -370,15 +390,21 @@ async function rescan() {
 }
 
 function connectFrame(frame, epoch, canInject = true) {
-    if (epoch !== generation || !availableTab || blocked || !/^https?:/.test(frame.url || "")) return;
+    if (epoch !== generation) return;
+    if (frame.url === "about:srcdoc") {
+        srcdocFrames.set(frame.frameId,frame.documentId);
+        scheduleRender();
+    }
+    else srcdocFrames.delete(frame.frameId);
+    if (!availableTab || blocked || !/^https?:/.test(frame.url || "")) return;
     const existing = frames.get(frame.frameId);
     if (existing) {
         if (!frame.documentId || existing.documentId === frame.documentId) return;
         existing.port.disconnect();
     }
     const targetTab = tabId;
-    const port = chrome.tabs.connect(tabId, { name:"snag-sidebar", frameId:frame.frameId });
-    const state = { port, frameId:frame.frameId, items:[], serial:++connectionId, documentId:frame.documentId, ready:false, fileRevision:0 };
+    const port = chrome.tabs.connect(tabId, { name:"snag-sidebar", frameId:frame.frameId,...(frame.documentId && {documentId:frame.documentId}) });
+    const state = { port, frameId:frame.frameId, url:frame.url, items:[], serial:++connectionId, documentId:frame.documentId, ready:false, fileRevision:0 };
     frames.set(frame.frameId, state);
     port.onDisconnect.addListener(() => {
         const disconnected = chrome.runtime.lastError;
@@ -412,6 +438,8 @@ function connectFrame(frame, epoch, canInject = true) {
                 if (prior.youtubeId !== item.youtubeId || newSource) choices.delete(item.key);
             }
             state.playlists = message.playlists;
+            state.segments = message.segments;
+            state.documentStart = message.documentStart;
             state.watchRevision = message.watchRevision;
             syncPlayerFiles(targetTab,state).catch(() => {});
             if (picked?.serial === state.serial && !state.items.some(item => item.key === picked.key)) {
@@ -424,6 +452,9 @@ function connectFrame(frame, epoch, canInject = true) {
             if (first && frame.frameId === 0 && videoRoute && enabled) {
                 autoScanVideo(targetTab,state,epoch).catch(() => {});
             }
+            scheduleRender();
+        } else if (message.type === "playlistText" && enabled && !blocked) {
+            receivePlaylistText(state,message);
             scheduleRender();
         } else if (message.type === "scanFiles" && enabled && !state.requestedScan) {
             acceptPageFiles(frame.frameId, state, message.files).catch(() => {});
@@ -484,7 +515,7 @@ async function refreshTab(id, nextUrl) {
     clearTimeout(scanTimer);
     scanLabel = "sideRescan";
     for (const frame of frames.values()) frame.port.disconnect();
-    frames.clear(); records.clear(); selections.clear(); choices.clear(); outcomes.clear(); tierRequests.clear();
+    frames.clear(); srcdocFrames.clear(); records.clear(); selections.clear(); choices.clear(); outcomes.clear(); tierRequests.clear();
     for (const row of rows.values()) removeRow(row);
     rows.clear();
     tabId = G.tabId = id;
@@ -607,8 +638,9 @@ function showDetails(row) {
     if (group.kind === "image") {
         const img = el("img"); img.alt = title(group, record); img.src = record.url; pane.append(img);
     } else if (["video","audio"].includes(group.kind)) row.stopPreview = detailPreview(pane,group,track);
-    pane.append(el("div", [record.name,record.type,...encodingStats(track,group.info?.duration || group.point?.duration),
-        record.size > 0 && bytes(record.size)].filter(Boolean).join(" · "), "detail-info"));
+    const duration = group.info?.duration || group.point?.duration || track.duration;
+    const size = isM3U8(record) || isMPD(record) ? trackSizeLabel(track,duration) : record.size > 0 && bytes(record.size);
+    pane.append(el("div", [record.name,record.type,...encodingStats(track,duration),size].filter(Boolean).join(" · "), "detail-info"));
     const link = el("a",record.url);
     link.target = "_blank"; link.rel = "noreferrer"; link.href = record.url;
     pane.append(link);
@@ -691,7 +723,7 @@ function updateRow(row, group) {
     const split = group.kind === "video" && (track.separate || group.biliId && !track.episodeCid);
     const paired = split && group.tracks.some(item => item.kind === "audio");
     const quality = fileQuality(group,track);
-    const duration = group.info?.duration || point?.duration;
+    const duration = group.info?.duration || point?.duration || track.duration;
     playback.hidden = !playing || playing === quality;
     const selector = node.querySelector(".quality");
     const variants = group.tracks.filter(item => item.kind === group.kind);
@@ -764,19 +796,25 @@ function resolvePickedFile() {
 }
 
 function render() {
-    groups = blocked ? [] : sidebarGroups(recordsWithPageFiles(), frames, picked?.key, currentVideo, videoRoute, [...publicTracks,...videoSources]);
+    const files = recordsWithPageFiles();
+    const streams = enabled && !blocked ? genericStreamMatches(files,frames,true) : new Map();
+    groups = blocked ? [] : sidebarGroups(files, frames, picked?.key, currentVideo, videoRoute, [...publicTracks,...videoSources],streams);
     if (!enabled) groups = groups.filter(group => !group.playerOnly);
     resolvePickedFile();
     const pickedGroup = picked && (groups.find(group => group.point?.key === picked.key && group.kind === picked.kind) ||
         groups.find(group => group.point?.key === picked.key));
     if (pickedGroup) filter = pickedGroup.kind;
-    const totals = { all:groups.length, video:0, image:0, audio:0, other:0 };
-    for (const group of groups) totals[group.kind]++;
+    const hasPlayer = groups.some(g => g.kind === "video" && g.point?.loaded && !g.point.ad && !g.playerOnly);
+    const secondary = group => hasPlayer && !group.point && group.kind === "video" && group.tracks.every(({record}) =>
+        record.fromSrcdoc || (srcdocFrames.has(record.frameId) && (!record.documentId || srcdocFrames.get(record.frameId) === record.documentId)));
+    const totals = { all:groups.filter(g=>!g.rawSegment).length, video:0, image:0, audio:0, other:0 };
+    for (const group of groups) if (!group.rawSegment && !secondary(group)) totals[group.kind]++;
     for (const [type,button] of filterButtons) {
         button.textContent = i18n(types[type]) + " " + totals[type];
         button.setAttribute("aria-pressed", String(filter === type));
     }
-    visible = groups.filter(group => picked ? group.point?.key === picked.key && group.kind === filter : filter === "all" || group.kind === filter);
+    visible = groups.filter(group => picked ? group.point?.key === picked.key && group.kind === filter :
+        filter === "all" || (group.kind === filter && !secondary(group)));
     if (G.reverse) visible.reverse();
     const raw = visible.filter(group => group.rawSegment);
     const regular = visible.filter(group => !group.rawSegment);

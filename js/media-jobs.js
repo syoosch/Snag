@@ -6,18 +6,36 @@ const retryable = new Set(['mediaSourceFailed','mediaSaveFailed','mediaBadFile',
 const jobName = /^job-[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/;
 let root, recentTimer;
 const wait = ms => new Promise(resolve => setTimeout(resolve,ms));
-async function withNetworkTimeout(signal,fn) {
+function sourceError(reason,status,retryAfter) {
+    return Object.assign(new Error('mediaSourceFailed'),{sourceFailure:{reason,status},retryAfter});
+}
+function transportError(error) {
+    if (error.name === 'TypeError' || error.name === 'NetworkError') throw Object.assign(sourceError(),{networkFailure:true});
+    throw error;
+}
+async function withNetworkTimeout(signal,stage,fn) {
     signal.throwIfAborted();
     const controller = new AbortController();
     const cancel = () => controller.abort(signal.reason);
     let timer;
     const activity = () => {
         clearTimeout(timer);
-        timer = setTimeout(() => controller.abort(new Error('mediaSourceFailed')),45000);
+        timer = setTimeout(() => controller.abort(sourceError('mediaRequestTimeout')),45000);
     };
     signal.addEventListener('abort',cancel,{once:true});
     activity();
     try { return await fn(controller.signal,activity); }
+    catch (error) {
+        signal.throwIfAborted();
+        const failure = controller.signal.aborted ? controller.signal.reason : error;
+        if (failure.message === 'mediaSourceFailed' || ['TypeError','NetworkError'].includes(failure.name)) {
+            const detail = sourceError(failure.sourceFailure?.reason,failure.sourceFailure?.status,failure.retryAfter);
+            detail.sourceFailure.stage = stage;
+            detail.networkFailure = failure.networkFailure;
+            throw detail;
+        }
+        throw failure;
+    }
     finally { clearTimeout(timer); signal.removeEventListener('abort',cancel); }
 }
 async function bridge(op,params = {}) {
@@ -44,11 +62,12 @@ async function discard(job) {
         catch { garbage.get(root).add(job.id); }
         job.directory = null;
     }
-    job.ready = []; job.counts = [];
+    job.ready = []; job.counts = []; job.partCounts = []; job.totalParts = 0;
 }
 function view(job) {
-    const {id,key,tabId,windowId,title,mode,state,error,expires,fileId,total} = job;
-    return {id,key,tabId,windowId,title,mode,state,error,expires,fileId,total,result:job.result,segmentProgress:job.segmentProgress,canRetry:state === 'failed' && !!job.request,
+    const {id,key,tabId,windowId,title,mode,state,error,sourceFailure,expires,fileId,total} = job;
+    return {id,key,tabId,windowId,title,mode,state,error,sourceFailure,expires,fileId,total,result:job.result,segmentProgress:job.segmentProgress,
+        totalParts:job.totalParts,completedParts:job.partCounts?.reduce((sum,n) => sum+n,0),canRetry:state === 'failed' && !!job.request,
         bytes:job.counts.reduce((a,b) => a+b,0)};
 }
 function notify(immediate = false) {
@@ -109,8 +128,12 @@ async function fetchPart(file,part,signal) {
         try {
             if (Object.keys(special).length) rule = await bridge('headers',{url,headers:special});
             signal.throwIfAborted();
-            const response = await fetch(url,{headers,credentials:'include',cache:'no-store',signal});
-            if (!response.ok || !response.body) { await response.body?.cancel(); throw new Error('mediaSourceFailed'); }
+            const response = await fetch(url,{headers,credentials:'include',cache:'no-store',signal}).catch(transportError);
+            if (!response.ok) {
+                await response.body?.cancel().catch(() => {});
+                throw sourceError(undefined,response.status,response.headers.get('Retry-After'));
+            }
+            if (!response.body) throw sourceError('mediaResponseIncomplete');
             return response;
         } finally { if (rule) await bridge('release',{id:rule}); }
     });
@@ -128,7 +151,9 @@ async function readList(file,signal,activity) {
             if (bytes > 16 * 1024 * 1024) throw new Error('mediaBadFile');
             text += decoder.decode(value,{stream:true});
         }
-        return {text:text + decoder.decode(),url:response.url};
+        text += decoder.decode();
+        if (/^\s*(?:<!doctype\s+html\b|<html\b|[\[{])/i.test(text)) throw sourceError('mediaUnexpectedResponse');
+        return {text,url:response.url};
     } finally { await reader.cancel().catch(() => {}); }
 }
 async function checkSpace(job) {
@@ -146,9 +171,9 @@ async function appendPart(job,index,track,part,out,signal,activity) {
         const response = await fetchPart(track,{...part,range},signal);
         const reader = response.body.getReader();
         try {
-            if (['video','audio'].includes(track.kind) && /^(text\/html|application\/json)\b/i.test(response.headers.get('content-type') || '')) throw new Error('mediaSourceFailed');
+            if (['video','audio'].includes(track.kind) && /^(text\/html|application\/json)\b/i.test(response.headers.get('content-type') || '')) throw sourceError('mediaUnexpectedResponse');
             const cr = /^bytes (\d+)-(\d+)\/(\d+|\*)$/i.exec(response.headers.get('content-range') || '');
-            if (response.status === 206 && (!cr || Number(cr[1]) !== (range?.offset || 0))) throw new Error('mediaSourceFailed');
+            if (response.status === 206 && (!cr || Number(cr[1]) !== (range?.offset || 0))) throw sourceError('mediaResponseIncomplete');
             const size = cr && cr[3] !== '*' ? +cr[3] : Number(response.headers.get('content-length')) || 0;
             if (!part.range && track.parts.length === 1 && size && size !== job.sizes[index]) {
                 job.sizes[index] = size;
@@ -159,7 +184,7 @@ async function appendPart(job,index,track,part,out,signal,activity) {
             let left = range?.length ?? Infinity;
             let written = 0;
             for (;;) {
-                const {value,done} = await reader.read();
+                const {value,done} = await reader.read().catch(transportError);
                 if (done) break;
                 activity();
                 if (skip >= value.length) { skip -= value.length; continue; }
@@ -167,17 +192,105 @@ async function appendPart(job,index,track,part,out,signal,activity) {
                 skip = 0;
                 await out.write(block);
                 written += block.length; left -= block.length;
-                job.counts[index] += block.length; notify();
+                if (!job.totalParts) { job.counts[index] += block.length; notify(); }
                 if (left === 0) break;
             }
-            if (!written || (cr && written !== Math.min(range?.length ?? Infinity,Number(cr[2])-Number(cr[1])+1))) throw new Error('mediaSourceFailed');
+            if (!written || (cr && written !== Math.min(range?.length ?? Infinity,Number(cr[2])-Number(cr[1])+1))) throw sourceError('mediaResponseIncomplete');
             const next = (range?.offset || 0) + written;
             const end = part.range ? part.range.offset + part.range.length : cr && cr[3] !== '*' ? +cr[3] : next;
             remainder = next < end;
-            if (remainder && response.status !== 206) throw new Error('mediaSourceFailed');
+            if (remainder && response.status !== 206) throw sourceError('mediaResponseIncomplete');
             if (remainder) range = {offset:next,length:end-next};
         } finally { await reader.cancel().catch(() => {}); }
     } while (remainder);
+}
+
+// Fail a window as a unit. Join cancelled writers before their scratch directory is removed.
+async function runWindow(items,signal,run) {
+    signal.throwIfAborted();
+    const controller = new AbortController();
+    const cancel = () => controller.abort(signal.reason);
+    signal.addEventListener('abort',cancel,{once:true});
+    try {
+        const results = await Promise.allSettled(items.map(async (item,index) => {
+            try { return await run(item,index,controller.signal); }
+            catch (error) { controller.abort(error); throw error; }
+        }));
+        controller.signal.throwIfAborted();
+        return results.map(result => result.value);
+    } finally { signal.removeEventListener('abort',cancel); }
+}
+function partRetryDelay(error,attempt) {
+    if (attempt >= 2) return;
+    const {status,reason} = error.sourceFailure || {};
+    if (!error.networkFailure && reason !== 'mediaRequestTimeout' && ![408,429,500,502,503,504].includes(status)) return;
+    let delay = 200 * 2 ** attempt;
+    if (error.retryAfter) {
+        const value = error.retryAfter.trim();
+        const suggested = /^\d+$/.test(value) ? Number(value)*1000 : Date.parse(value)-Date.now();
+        if (!Number.isNaN(suggested)) delay = Math.max(delay,suggested);
+    }
+    // Leave a longer server-requested wait to an explicit later retry.
+    if (delay <= 2000) return delay;
+}
+function waitForRetry(ms,signal) {
+    signal.throwIfAborted();
+    return new Promise((resolve,reject) => {
+        const cancel = () => { clearTimeout(timer); reject(signal.reason); };
+        const timer = setTimeout(() => { signal.removeEventListener('abort',cancel); resolve(); },ms);
+        signal.addEventListener('abort',cancel,{once:true});
+    });
+}
+async function retryPart(signal,run) {
+    for (let attempt = 0; ; attempt++) {
+        signal.throwIfAborted();
+        try { return await run(); }
+        catch (error) {
+            signal.throwIfAborted();
+            const delay = partRetryDelay(error,attempt);
+            if (delay == null) throw error;
+            await waitForRetry(delay,signal);
+        }
+    }
+}
+function stagePart(job,index,track,part,handle,signal) {
+    return retryPart(signal,async () => {
+        const writer = await handle.createWritable();
+        try {
+            await withNetworkTimeout(signal,'mediaSegmentReadFailed',(s,touch) => appendPart(job,index,track,part,writer,s,touch));
+            signal.throwIfAborted();
+            await writer.close();
+            return handle.getFile();
+        } catch (error) {
+            await writer.abort().catch(() => {});
+            throw error;
+        }
+    });
+}
+async function receiveParts(job,index,track,out,signal) {
+    const name = 'parts-' + index;
+    const scratch = await job.directory.getDirectoryHandle(name,{create:true});
+    const width = Math.max(1,Math.floor(4/job.plan.tracks.length));
+    try {
+        for (let start = 0; start < track.parts.length; start += width) {
+            const batch = track.parts.slice(start,start+width);
+            const files = await runWindow(batch,signal,async (part,slot,s) => {
+                const handle = await scratch.getFileHandle(String(slot),{create:true});
+                return stagePart(job,index,track,part,handle,s);
+            });
+            // Network completion order is independent of media order. Even an oversized part stays on disk.
+            for (const [slot,file] of files.entries()) {
+                for await (const chunk of file.stream()) {
+                    signal.throwIfAborted();
+                    await out.write(chunk);
+                }
+                job.counts[index] += file.size;
+                job.partCounts[index]++;
+                notify();
+                await remove(scratch,String(slot));
+            }
+        }
+    } finally { await remove(job.directory,name,true); }
 }
 async function receive(job,index,track,signal) {
     if (job.ready[index]) return;
@@ -200,8 +313,10 @@ async function receive(job,index,track,signal) {
                 const block = Uint8Array.from(atob(chunk),c => c.charCodeAt(0));
                 await out.write(block); job.counts[index] += block.length; notify();
             }
-        } else for (const part of track.parts)
-            await withNetworkTimeout(signal,(s,touch) => appendPart(job,index,track,part,out,s,touch));
+        } else if (job.totalParts) await receiveParts(job,index,track,out,signal);
+        else for (const part of track.parts)
+            await withNetworkTimeout(signal,track.playlist ? 'mediaSegmentReadFailed' : 'mediaFileReadFailed',
+                (s,touch) => appendPart(job,index,track,part,out,s,touch));
         signal.throwIfAborted();
         await out.close();
         job.ready[index] = file;
@@ -210,6 +325,7 @@ async function receive(job,index,track,signal) {
         await out.abort().catch(() => {});
         await remove(job.directory,name);
         job.counts[index] = 0;
+        if (job.partCounts) job.partCounts[index] = 0;
         throw error;
     }
 }
@@ -226,7 +342,10 @@ function runCodec(message,signal) {
     });
 }
 async function receiveTrack(job,index,track,signal) {
-    try { await receive(job,index,track,signal); }
+    try {
+        if (track.playlist && !job.totalParts) await retryPart(signal,() => receive(job,index,track,signal));
+        else await receive(job,index,track,signal);
+    }
     catch (error) {
         if (signal.aborted || error.name === 'QuotaExceededError' || error.message === 'mediaSpace' ||
             track.parts?.length !== 1 || !track.backups?.length) throw error;
@@ -308,7 +427,7 @@ async function youtubeManifest(request,signal) {
             throw new Error('mediaBadFile');
         return url.href;
     }
-    const read = file => withNetworkTimeout(signal,(s,touch)=>readList({...file,url:mediaUrl(file.url)},s,touch));
+    const read = file => withNetworkTimeout(signal,'mediaPlaylistReadFailed',(s,touch)=>readList({...file,url:mediaUrl(file.url)},s,touch));
     for (const source of (request.youtube.manifests || []).slice(0,2)) {
         if (!['dash','hls'].includes(source.playlist)) continue;
         try {
@@ -371,14 +490,23 @@ async function prepareOutput(job,signal,tryManifest) {
         if (!job.plan && req.youtube.codec && req.mode !== 'audio') throw new Error('mediaCodecUnavailable');
         if (!job.plan) await receiveYouTube(job,signal);
     }
-    job.plan ||= await MediaSources.plan(req,file => withNetworkTimeout(signal,(s,touch) => readList(file,s,touch)));
+    job.plan ||= await MediaSources.plan(req,file => withNetworkTimeout(signal,'mediaPlaylistReadFailed',(s,touch) => readList(file,s,touch)));
     const tracks = job.plan.tracks;
+    const parts = tracks.every(t => t.playlist) ? tracks.reduce((n,t) => n+t.parts.length,0) : 0;
+    job.totalParts = parts > 1 ? parts : 0;
+    job.partCounts = tracks.map((t,i) => job.totalParts && job.ready[i] ? t.parts.length : 0);
     job.sizes = tracks.map((t,i) => job.sizes?.[i] || Number(t.size) || 0);
     job.total = job.sizes.every(n => n > 0) ? job.sizes.reduce((a,b) => a+b,0) : 0;
     await checkSpace(job);
-    const transfers = await Promise.allSettled(tracks.map((t,i) => receiveTrack(job,i,t,signal)));
-    const failure = transfers.find(r => r.status === 'rejected');
-    if (failure) throw failure.reason;
+    if (job.totalParts) {
+        for (let start = 0; start < tracks.length; start += 4)
+            await runWindow(tracks.slice(start,start+4),signal,(t,i,s) => receiveTrack(job,start+i,t,s));
+    }
+    else {
+        const transfers = await Promise.allSettled(tracks.map((t,i) => receiveTrack(job,i,t,signal)));
+        const failure = transfers.find(r => r.status === 'rejected');
+        if (failure) throw failure.reason;
+    }
     signal.throwIfAborted();
     let output = job.ready[0], ext = tracks[0].ext || 'mp4', codec;
     if (!job.plan.copy) {
@@ -418,9 +546,14 @@ async function processJob(job) {
         } else {
             const key = error.name === 'QuotaExceededError' ? 'mediaSpace' : error.message;
             job.error = /^media[A-Z]/.test(key) ? key : 'mediaSourceFailed';
+            job.sourceFailure = error.sourceFailure;
             job.state = 'failed'; job.expires = Date.now()+retention;
             if (job.directory) await remove(job.directory,'output').catch(() => {});
-            if (req.youtube) { await discard(job); job.plan = null; job.sizes = []; job.total = 0; }
+            if (req.youtube || req.files[0]?.playlist && !job.ready.some(Boolean)) {
+                await discard(job);
+                // An explicit retry can read a fresh manifest when no completed track depends on the old plan.
+                job.plan = null; job.sizes = []; job.total = 0;
+            }
             if (!retryable.has(job.error)) {
                 await discard(job);
                 job.request = job.plan = null;
@@ -434,7 +567,7 @@ async function processJob(job) {
 }
 function launch(job) {
     clearTimeout(job.expiryTimer);
-    job.state = 'downloading'; job.error = null; job.expires = 0;
+    job.state = 'downloading'; job.error = null; job.sourceFailure = null; job.expires = 0;
     job.controller = new AbortController();
     job.task = processJob(job); notify(true);
     return view(job);

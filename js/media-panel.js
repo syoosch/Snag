@@ -22,8 +22,15 @@ function mediaFile(track,group,page) {
     const identity = group.biliId && SnagBili.representation(record.url)?.identity;
     const backups = identity ? [...new Set([...(group.point?.sources || []),...videoSources,...publicTracks]
         .filter(s => s.url !== record.url && SnagBili.representation(s.url)?.identity === identity).map(s => s.url))] : [];
-    return {url:record.url,originalUrl:record.url,backups,kind:track.kind,headers,size:track.size || record.size,ext,
-        playlist:isM3U8(record) ? 'hls' : isMPD(record) ? 'dash' : null};
+    const playlist = isM3U8(record) ? 'hls' : isMPD(record) ? 'dash' : null;
+    const point = group.point, frame = playlist && frames.get(point?.frameId ?? record.frameId);
+    const nativePlaylist = frame && point?.kind === 'video' && point.loaded && !point.protectedMedia && !point.inactiveSlot &&
+        !SnagBili.route(frame.url) && !SnagPlayer.youtubeId(frame.url) && resourceAddress(point.current) === resourceAddress(record.url);
+    const linked = frame && (track.streamPlaylist || nativePlaylist) && sameStreamDocument(frame,record);
+    const observedUrls = linked ? streamDownloadUrls(frame,recordsWithPageFiles().values()) : undefined;
+    const playbackHeight = linked && playlist === 'hls' && point?.loaded ? Math.min(point.width,point.height) || undefined : undefined;
+    return {url:record.url,originalUrl:record.url,playlist,observedUrls,playbackHeight,quality:track.streamQuality,
+        backups,kind:track.kind,headers,size:playlist ? undefined : track.size || record.size,ext};
 }
 async function startMedia(group,mode = 'full') {
     if (tierRequests.get(group.key)?.pending) return;
@@ -58,8 +65,14 @@ function progressLabel(job) {
     if (job.state === 'processing') return job.mode === 'full' ? i18n.mediaMerging : i18n.mediaExtracting;
     if (job.state === 'saving') return i18n.mediaSaving;
     if (job.state === 'done') return i18n.downloaded;
-    if (job.state === 'failed') return i18n[job.error] || i18n.mediaSourceFailed;
+    if (job.state === 'failed') {
+        const detail = job.sourceFailure;
+        if (!detail?.stage) return i18n[job.error] || i18n.mediaSourceFailed;
+        return [i18n[detail.stage],detail.status && 'HTTP ' + detail.status,detail.reason && i18n[detail.reason]].filter(Boolean).join(' · ');
+    }
     if (job.segmentProgress != null) return i18n.mediaSegments + ' ' + job.segmentProgress + '%';
+    if (job.totalParts) return i18n('mediaPartProgress',[String(job.completedParts),String(job.totalParts),
+        String(Math.floor(100*job.completedParts/job.totalParts))]);
     const amount = job.total ? Math.min(99,Math.floor(job.bytes / job.total * 100)) + '%' : bytes(job.bytes);
     return [i18n.sideDownloading,amount].filter(Boolean).join(' ');
 }

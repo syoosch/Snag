@@ -33,6 +33,7 @@ let debounce = undefined;
 let debounceCount = 0;
 let debounceTime = 0;
 const reFilename = /filename="?([^"]+)"?/;
+const srcdocDocuments = new Set();
 const fileMimeHints = new Map(Object.entries({
     jpg:"image/jpeg", jpeg:"image/jpeg", png:"image/png", gif:"image/gif", webp:"image/webp", avif:"image/avif",
     svg:"image/svg+xml", bmp:"image/bmp", ico:"image/x-icon", pdf:"application/pdf"
@@ -250,6 +251,7 @@ function findMedia(data, isRegex = false, filter = false, timer = false) {
             tabId: data.tabId,
             frameId: data.frameId,
             documentId: data.documentId,
+            fromSrcdoc: (data.documentUrl === "about:srcdoc" || srcdocDocuments.has(data.documentId)) || undefined,
             method: data.method !== "GET" ? data.method : undefined,
             isRegex: isRegex,
             requestId: data.requestId ?? Date.now().toString(),
@@ -694,6 +696,10 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
  * 检查 注入脚本
  */
 chrome.webNavigation.onCommitted.addListener(function (details) {
+    if (details.url === "about:srcdoc" && details.documentId) {
+        srcdocDocuments.add(details.documentId);
+        if (srcdocDocuments.size > 512) srcdocDocuments.delete(srcdocDocuments.values().next().value);
+    }
     if (isSpecialPage(details.url) || details.tabId <= 0 || !G.initSyncComplete) { return; }
     // console.log('onCommitted', details);
 
@@ -1070,6 +1076,8 @@ function clearRedundant() {
         chrome.declarativeNetRequest.getSessionRules(function (rules) {
             let mobileFlag = false;
             for (let item of rules) {
+                // Offscreen requests have no browser tab. Their owner releases the rule after the response arrives.
+                if (isMediaRuleId(item.id) || item.condition.tabIds?.includes(-1)) continue;
                 if (item.condition.tabIds) {
                     // 如果tabIds列表都不存在 则删除该条规则
                     if (!item.condition.tabIds.some(id => allTabId.has(id))) {

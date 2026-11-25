@@ -7,6 +7,7 @@ Snag 是一个采用 Manifest V3 的浏览器扩展。仓库根目录就是可�
 | 用户动作 | 从这里读起 |
 | --- | --- |
 | 网页开始播放 | [后台脚本](js/background.js)记录符合规则的网络请求。[页面扫描脚本](js/sidebar-page.js)查找播放器和可定位的页面元素，补充标题、预览和位置。 |
+| 普通播放器使用 HLS 或 DASH | [通用清单匹配](js/sidebar-streams.js)在同一 iframe 文档中核对媒体标识、播放时长和实际分片，再沿清单里的引用找回主清单。[清单解析](js/media-sources.js)负责读取资源引用和制定下载顺序。 |
 | 用户打开侧栏 | [侧栏入口](sidebar.html)加载界面。[侧栏主脚本](js/sidebar.js)更新当前标签页的数据，[资源目录](js/sidebar-catalog.js)将抓取记录和页面结果组合成卡片。 |
 | 选择画质或编码 | [画质选择](js/sidebar-quality.js)处理下载选项，[卡片信息](js/sidebar-metadata.js)显示格式和大小。B 站和 YouTube 的播放器适配分别在 [B 站适配](js/sidebar-bili.js)和[播放器识别](js/sidebar-player.js)中。 |
 | 保存视频或音轨 | [下载按钮](js/media-panel.js)提交完整、仅音频或仅画面任务。[后台桥接](js/media-bridge.js)连接浏览器下载接口与[后台处理页面](media-host.html)。 |
@@ -35,6 +36,8 @@ python tools/package.py
 | 安装、设置、升级 | `node tests/welcome.js`、`node tests/controls-settings.js`、`node tests/upgrade.js` |
 | 资源列表、网页定位、画质和编码选择 | `node tests/sidebar.js`、`node tests/sidebar-quality.js`、`node tests/selection-ui.js` |
 | B 站换片、番剧、YouTube 分段 | `node tests/bili-autoplay.js`、`node tests/bili-episodes.js`、`node tests/youtube-segments.js` |
+| 动态播放器、签名清单和透明遮罩 | `node tests/generic-streams.js`、`node tests/player-discovery.js` |
+| 多分片下载进度、重试、取消与离屏请求规则 | `node tests/stream-parts.js` |
 | 合并和音轨提取、保存与清理 | `node tests/local-media.js`、`node tests/stream-save.js`、`node tests/media-cleanup.js` |
 
 运行全部浏览器测试可使用以下命令。测试使用本地媒体样本和独立的临时浏览器配置，默认无头运行。可以用 `CHROME` 环境变量指定 Edge 或 Chrome 可执行文件的位置。[测试驱动](tests/lib/harness.js) · [测试样本](tests/fixtures/) · [上游测试框架与部分媒体样本来源](https://github.com/xifangczy/cat-catch/tree/33b21ba98995d01602cd289f082754fa00ccf042/tests)
