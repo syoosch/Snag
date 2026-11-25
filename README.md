@@ -8,11 +8,13 @@ Snag 是一款浏览器侧栏扩展。看网页时，可以直接在侧栏里找
 
 ## 安装
 
-1. 在[发布页](https://github.com/syoosch/Snag/releases/latest)的 **Assets** 下下载 `snag-1.0.2.zip`，解压到一个会长期保留的文件夹。
+1. 点上方的 **下载最新版**，在发布页的 **Assets** 下下载 `snag-<版本号>.zip`，解压到一个会长期保留的文件夹。
 2. 在 Edge 地址栏输入 `edge://extensions`，打开 **开发人员模式**，点 **加载解压缩的扩展**。选择打开后能直接看到 `manifest.json` 的那层文件夹。
 3. 欢迎页出现后，点 **同意并打开侧栏**。以后可以从浏览器右上角的 **扩展 → Snag** 打开。
 
 Chrome 用户在 `chrome://extensions` 打开 **开发者模式**，点 **加载已解压的扩展程序**，选择同一个文件夹。[Edge 官方安装图解](https://learn.microsoft.com/zh-cn/microsoft-edge/extensions/getting-started/extension-sideloading) · [Chrome 官方安装图解](https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world?hl=zh-cn#load-unpacked)
+
+已安装 Snag 的用户可在原安装目录更新，再到扩展管理页确认版本号。[更新步骤](docs/usage.md#更新插件)
 
 ## 下载第一个文件
 
