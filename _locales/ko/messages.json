@@ -1,9 +1,657 @@
 {
-  "openSidebar": {
-    "message": "사이드바 열기"
+  "welcomeSaveList": {
+    "message": "Find the item in the resource list and click its download button."
+  },
+  "welcomeChoosePage": {
+    "message": "Open the web page you want to save a video or image from."
+  },
+  "welcomeStart": {
+    "message": "Agree and open sidebar"
+  },
+  "welcomePanelFailed": {
+    "message": "The sidebar could not open in this window. Open it from the Extensions menu on your web page."
   },
   "welcomeGuide": {
     "message": "사용 안내"
+  },
+  "welcomeInstalled": {
+    "message": "Snag is installed."
+  },
+  "welcomeGuideHeading": {
+    "message": "Save media from a page"
+  },
+  "welcomeOpen": {
+    "message": "Open a page with a video or an image. In your browser’s Extensions menu, choose Snag."
+  },
+  "welcomeSave": {
+    "message": "Choose an item in the sidebar and click Download to save it."
+  },
+  "welcomeAgree": {
+    "message": "Agree and close"
+  },
+  "welcomeClose": {
+    "message": "Close guide"
+  },
+  "welcomeAgreement": {
+    "message": "Continuing or closing this page means you accept the terms below."
+  },
+  "welcomeSample": {
+    "message": "Snag icon"
+  },
+  "welcomeTry": {
+    "message": "Try saving"
+  },
+  "welcomeTerms": {
+    "message": "Privacy and terms"
+  },
+  "welcomePrivacy": {
+    "message": "Your browser stores capture history. Previews and downloads contact the file’s source. On Bilibili, Snag may ask the site for available qualities or the current episode’s listing."
+  },
+  "welcomeOnlineMedia": {
+    "message": "Streaming saves and live recordings are written on this device. Snag includes FFmpeg for merging and extracting tracks."
+  },
+  "welcomeSharing": {
+    "message": "Forwarding is off by default. If you turn it on, the recipient can receive media links and request headers containing access credentials."
+  },
+  "welcomeUsage": {
+    "message": "Save only content you own or have permission to download. You are responsible for your use. The tool is provided as is, and the developers assume no liability for your use or for direct or indirect damages."
+  },
+  "upstreamCredit": {
+    "message": "Based on the open-source project by xifangczy"
+  },
+  "welcomeUninstall": {
+    "message": "Uninstall extension"
+  },
+  "openSidebar": {
+    "message": "사이드바 열기"
+  },
+  "sideResources": {
+    "message": "Page resources"
+  },
+  "sideImages": {
+    "message": "Images"
+  },
+  "sideAll": {
+    "message": "All"
+  },
+  "sideOther": {
+    "message": "Other"
+  },
+  "sidePick": {
+    "message": "Pick on page"
+  },
+  "sideRescan": {
+    "message": "Rescan"
+  },
+  "sideScanning": {
+    "message": "Scanning…"
+  },
+  "sideScanned": {
+    "message": "Scanned"
+  },
+  "sideScanNoMedia": {
+    "message": "No matching file for the current video yet. Play it for a few seconds and rescan, or choose Reload page."
+  },
+  "sideScanFailed": {
+    "message": "Wait for the page to finish loading and try Rescan, or choose Reload page."
+  },
+  "sideReloadCapture": {
+    "message": "Reload page"
+  },
+  "sideListen": {
+    "message": "Listen"
+  },
+  "sidePauseListening": {
+    "message": "Pause"
+  },
+  "sideAudioTrack": {
+    "message": "Audio preview"
+  },
+  "sideAudioGesture": {
+    "message": "Click once on the original page, then choose Listen again."
+  },
+  "sideAudioUnavailable": {
+    "message": "This audio track couldn’t play. You can still download the file."
+  },
+  "sideCancelPick": {
+    "message": "Cancel picking"
+  },
+  "sidePickHint": {
+    "message": "Click a video, image or audio player on the page. Esc cancels."
+  },
+  "sideMulti": {
+    "message": "Select multiple"
+  },
+  "sideSelect": {
+    "message": "Select"
+  },
+  "sideDone": {
+    "message": "Done"
+  },
+  "sideBack": {
+    "message": "Back to list"
+  },
+  "sideDetails": {
+    "message": "Details"
+  },
+  "sideLocate": {
+    "message": "Locate on page"
+  },
+  "sideNoLocation": {
+    "message": "No page location"
+  },
+  "sideGone": {
+    "message": "That element is no longer on the page."
+  },
+  "sideUnavailable": {
+    "message": "Open a regular web page to pick resources."
+  },
+  "sideAdvertisement": {
+    "message": "Advertisement"
+  },
+  "sidePlayingNow": {
+    "message": "Playing now"
+  },
+  "sidePlayerNoFile": {
+    "message": "No download link yet"
+  },
+  "sideProtectedPlayer": {
+    "message": "Protected playback"
+  },
+  "sideWaiting": {
+    "message": "This item is selected. Play the video or load the image. A matching file will appear here if found."
+  },
+  "sideEmpty": {
+    "message": "Play the media for a few seconds, then choose Rescan or Reload page."
+  },
+  "sidePaused": {
+    "message": "Capture is paused."
+  },
+  "sideSegment": {
+    "message": "Media fragment"
+  },
+  "sideSegments": {
+    "message": "Unmatched fragments"
+  },
+  "sideSaveSegment": {
+    "message": "Save fragment"
+  },
+  "sideEstimatedSize": {
+    "message": "About $size$",
+    "placeholders": {
+      "size": {
+        "content": "$1"
+      }
+    }
+  },
+  "sideCardFormat": {
+    "message": "Format"
+  },
+  "sideSavedFormat": {
+    "message": "Saved format"
+  },
+  "sideExpectedFormat": {
+    "message": "Expected format"
+  },
+  "sideCardSize": {
+    "message": "Size"
+  },
+  "sidePictureSize": {
+    "message": "Video track size"
+  },
+  "sideCodec": {
+    "message": "Codec"
+  },
+  "sideExpectedCodec": {
+    "message": "Expected codec"
+  },
+  "sideAutomatic": {
+    "message": "Auto"
+  },
+  "sideVersion": {
+    "message": "Version"
+  },
+  "sideDocument": {
+    "message": "Document"
+  },
+  "sideGenericFile": {
+    "message": "File"
+  },
+  "mediaCodecUnavailable": {
+    "message": "The selected codec is unavailable. Choose another version."
+  },
+  "mergePreparing": {
+    "message": "Downloading video and audio. They will merge automatically on this page once both are ready."
+  },
+  "mergeFileReady": {
+    "message": "Ready"
+  },
+  "mergeSending": {
+    "message": "Preparing the local merge"
+  },
+  "mergeProcessing": {
+    "message": "Merging tracks on your computer"
+  },
+  "mergeFinished": {
+    "message": "Merge complete. Check your browser downloads."
+  },
+  "mergeUnconfirmed": {
+    "message": "The merge tool has not acknowledged both files. View its details or resend the downloaded files."
+  },
+  "mergeRetrySend": {
+    "message": "Resend files"
+  },
+  "mergeToolDetails": {
+    "message": "View merge details"
+  },
+  "mergeMissingFiles": {
+    "message": "A track is missing. Start the download again from the sidebar."
+  },
+  "mergeDownloadFailed": {
+    "message": "A file failed to download. Use the retry button next to it to continue."
+  },
+  "mergeSetupFailed": {
+    "message": "Could not prepare this download. Start the merge again from the video sidebar."
+  },
+  "mergeNoProgress": {
+    "message": "No data received for 30 seconds"
+  },
+  "sideEpisode": {
+    "message": "Episode $index$",
+    "placeholders": {
+      "index": {
+        "content": "$1"
+      }
+    }
+  },
+  "sidePlayingResolution": {
+    "message": "Playing at $quality$",
+    "placeholders": {
+      "quality": {
+        "content": "$1"
+      }
+    }
+  },
+  "sideDownloadAt": {
+    "message": "Download $quality$",
+    "placeholders": {
+      "quality": {
+        "content": "$1"
+      }
+    }
+  },
+  "sideTier": {
+    "message": "Quality"
+  },
+  "sideEncodings": {
+    "message": "Encoding options"
+  },
+  "sideCapturedVersion": {
+    "message": "Captured version"
+  },
+  "sideTierOnPage": {
+    "message": "$name$ (switch player)",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "sideTierNoFile": {
+    "message": "$name$ (file unavailable)",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "sideTierSwitching": {
+    "message": "Waiting for the player to switch quality…"
+  },
+  "sideTierFailed": {
+    "message": "No file was available for $name$. Your previous download selection has been kept.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "mediaDownloadVideo": {
+    "message": "Download video"
+  },
+  "mediaChoose": {
+    "message": "Download options"
+  },
+  "mediaAudioOnly": {
+    "message": "Audio only"
+  },
+  "mediaVideoOnly": {
+    "message": "Video without sound"
+  },
+  "mediaFindAudio": {
+    "message": "Find audio"
+  },
+  "mediaNoAudio": {
+    "message": "No audio track found"
+  },
+  "mediaNoVideo": {
+    "message": "No video track found"
+  },
+  "mediaMerging": {
+    "message": "Merging tracks"
+  },
+  "mediaExtracting": {
+    "message": "Extracting track"
+  },
+  "mediaSaving": {
+    "message": "Saving"
+  },
+  "mediaSpace": {
+    "message": "Not enough temporary storage"
+  },
+  "mediaSourceFailed": {
+    "message": "Download interrupted"
+  },
+  "mediaPlaylistReadFailed": {
+    "message": "Could not read playlist"
+  },
+  "mediaSegmentReadFailed": {
+    "message": "Could not read media segment"
+  },
+  "mediaFileReadFailed": {
+    "message": "Could not read media file"
+  },
+  "mediaRequestTimeout": {
+    "message": "Timed out waiting for data"
+  },
+  "mediaUnexpectedResponse": {
+    "message": "Server returned a page or other unexpected content"
+  },
+  "mediaResponseIncomplete": {
+    "message": "Incomplete response"
+  },
+  "mediaSegments": {
+    "message": "Collecting segments"
+  },
+  "mediaPartProgress": {
+    "message": "Parts $done$/$total$ · $percent$%",
+    "placeholders": {
+      "done": {
+        "content": "$1"
+      },
+      "total": {
+        "content": "$2"
+      },
+      "percent": {
+        "content": "$3"
+      }
+    }
+  },
+  "mediaSegmentIncomplete": {
+    "message": "Incomplete video segments"
+  },
+  "mediaSegmentUnavailable": {
+    "message": "YouTube could not play this version"
+  },
+  "mediaSegmentQuality": {
+    "message": "Selected quality unavailable"
+  },
+  "mediaSaveFailed": {
+    "message": "Could not save the file"
+  },
+  "mediaBadFile": {
+    "message": "Could not process this file"
+  },
+  "mediaProtected": {
+    "message": "This playlist is encrypted"
+  },
+  "mediaLive": {
+    "message": "Use the recorder in Details for live streams"
+  },
+  "mediaUnavailable": {
+    "message": "Local downloads are unavailable"
+  },
+  "mediaClear": {
+    "message": "Clear now"
+  },
+  "mediaCancel": {
+    "message": "Cancel"
+  },
+  "mediaQueued": {
+    "message": "대기 중"
+  },
+  "mediaLocalTool": {
+    "message": "Local media tools"
+  },
+  "mediaPickFiles": {
+    "message": "Choose media files"
+  },
+  "mediaTasks": {
+    "message": "Downloads"
+  },
+  "mediaRetention": {
+    "message": "$size$ retained until $time$",
+    "placeholders": {
+      "size": {
+        "content": "$1"
+      },
+      "time": {
+        "content": "$2"
+      }
+    }
+  },
+  "sideMerge": {
+    "message": "Merge tracks"
+  },
+  "sideShowMore": {
+    "message": "Show more"
+  },
+  "sideChosen": {
+    "message": "Selected on the page"
+  },
+  "sideProgress": {
+    "message": "View progress"
+  },
+  "sideShowFile": {
+    "message": "Show in folder"
+  },
+  "sideDownloading": {
+    "message": "Downloading…"
+  },
+  "sideInterrupted": {
+    "message": "Download interrupted. Try again or open Details."
+  },
+  "sideHandedOff": {
+    "message": "Opened the download tool."
+  },
+  "playbackRateLimit": {
+    "message": "This player rejected that speed. Try 16× or lower."
+  },
+  "playbackRateUnsupported": {
+    "message": "Choose a positive speed supported by this player."
+  },
+  "playbackEnterFullscreen": {
+    "message": "Enter video fullscreen"
+  },
+  "playbackExitFullscreen": {
+    "message": "Exit fullscreen"
+  },
+  "playbackConfirmFullscreen": {
+    "message": "Click “Enter video fullscreen” on the webpage."
+  },
+  "playbackFullscreenBlocked": {
+    "message": "This page could not enter fullscreen."
+  },
+  "sidePreviewLoading": {
+    "message": "Loading preview…"
+  },
+  "sidePreviewFollows": {
+    "message": "Live preview from the webpage"
+  },
+  "sidePreviewWaiting": {
+    "message": "Waiting for the webpage player"
+  },
+  "sidePlayOnPage": {
+    "message": "Play on the webpage"
+  },
+  "sidePreviewUnavailable": {
+    "message": "A preview is unavailable for this file."
+  },
+  "sidePreviewSegment": {
+    "message": "This fragment cannot play on its own."
+  },
+  "sidePreviewManifest": {
+    "message": "This playlist needs its original player to preview."
+  },
+  "sidePreviewSilent": {
+    "message": "Silent file preview"
+  },
+  "sidePlayPreview": {
+    "message": "Play preview"
+  },
+  "sidePausePreview": {
+    "message": "Pause preview"
+  },
+  "sideNoPreview": {
+    "message": "No preview"
+  },
+  "sideCopyLink": {
+    "message": "Copy link"
+  },
+  "sideCopyFailed": {
+    "message": "Could not copy. The link is available in Details."
+  },
+  "sideFindMore": {
+    "message": "Can't find the media?"
+  },
+  "sideFindHint": {
+    "message": "Rescan keeps your playback position. Reload page starts the page again."
+  },
+  "playbackTitle": {
+    "message": "Playback controls"
+  },
+  "playbackBack": {
+    "message": "Back to resources"
+  },
+  "playbackFind": {
+    "message": "Find players"
+  },
+  "playbackSource": {
+    "message": "Page to control"
+  },
+  "playbackChoose": {
+    "message": "Choose a player"
+  },
+  "playbackSpeed": {
+    "message": "Speed"
+  },
+  "playbackCustom": {
+    "message": "Custom…"
+  },
+  "playbackApply": {
+    "message": "Apply"
+  },
+  "playbackPosition": {
+    "message": "Playback position"
+  },
+  "playbackEmpty": {
+    "message": "No player found on this page"
+  },
+  "playbackEmptyHelp": {
+    "message": "Start a video or audio clip on the page. Its controls will appear here."
+  },
+  "playbackChoosePage": {
+    "message": "Choose a web page"
+  },
+  "playbackPageHelp": {
+    "message": "Choose a page with video or audio above, or switch to its tab."
+  },
+  "playbackLive": {
+    "message": "Live"
+  },
+  "playbackTools": {
+    "message": "Download and parsing tools"
+  },
+  "playbackGone": {
+    "message": "The player has left the page. Looking again."
+  },
+  "playbackActionFailed": {
+    "message": "The page could not complete this action. Try the player on the original page."
+  },
+  "playbackShotFailed": {
+    "message": "This player could not save a screenshot."
+  },
+  "settingsGeneral": {
+    "message": "General settings"
+  },
+  "settingsCapture": {
+    "message": "Capture rules"
+  },
+  "settingsExtensions": {
+    "message": "File extensions"
+  },
+  "settingsMediaTypes": {
+    "message": "Media types"
+  },
+  "settingsDownloads": {
+    "message": "Downloads and filenames"
+  },
+  "settingsNames": {
+    "message": "Filename templates"
+  },
+  "settingsAdvanced": {
+    "message": "Advanced settings"
+  },
+  "settingsBackup": {
+    "message": "Backup and maintenance"
+  },
+  "settingsCategory": {
+    "message": "Settings category"
+  },
+  "settingsBrowsing": {
+    "message": "Sidebar and resource list"
+  },
+  "settingsSidebar": {
+    "message": "Open the sidebar when I click the extension icon"
+  },
+  "settingsBadge": {
+    "message": "Show the resource count on the extension icon"
+  },
+  "settingsDedup": {
+    "message": "Skip duplicate resources"
+  },
+  "settingsNewest": {
+    "message": "Show newest resources first"
+  },
+  "settingsSaveFiles": {
+    "message": "Saving files"
+  },
+  "settingsAskWhere": {
+    "message": "Ask where to save each download"
+  },
+  "settingsUseNames": {
+    "message": "Use a custom filename"
+  },
+  "settingsEditName": {
+    "message": "Edit filename template"
+  },
+  "settingsAutoSave": {
+    "message": "Changes are saved automatically."
+  },
+  "settingsSaved": {
+    "message": "Saved"
+  },
+  "settingsSaveFailed": {
+    "message": "Could not save. Try again."
+  },
+  "settingsTransfer": {
+    "message": "Back up settings"
+  },
+  "settingsMaintenance": {
+    "message": "Maintenance"
+  },
+  "port": {
+    "message": "Port"
   },
   "extensionName": {
     "message": "Snag"
@@ -551,7 +1199,9 @@
   "mp4Format": {
     "message": "MP4"
   },
-  "writeDirectlyToFile": { "message": "선택한 파일에 직접 쓰기" },
+  "writeDirectlyToFile": {
+    "message": "선택한 파일에 직접 쓰기"
+  },
   "downloadWhileSaving": {
     "message": "스트림 다운로드"
   },

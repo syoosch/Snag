@@ -112,9 +112,12 @@ test('Snag · 安装欢迎页与使用指南', async t => {
     await browser.sw.eval("chrome.storage.sync.set({mqttTopic:'test/collection',onlineServiceAddress:'obsolete'})");
     const previousFiles = browser.files();
     await click(options, '.settings-nav a[href="#anchorOperation"]');
+    assert.ok(await until(()=>options.eval('document.querySelector("#anchorOperation.active #exportOptions")?.getClientRects().length')),
+        'backup controls are visible after hash navigation');
     await click(options, '#exportOptions');
     const backup = await browser.download(previousFiles, 10000);
-    assert.ok(backup);
+    assert.ok(backup,'settings export did not finish | '+JSON.stringify(await options.eval(
+        'chrome.downloads.search({limit:3}).then(items=>items.map(i=>[i.state,i.error,i.filename]))'))+' | '+options.errors);
     const version = await browser.sw.eval('chrome.runtime.getManifest().version');
     const settings = JSON.parse(Buffer.from(backup.toString(), 'base64').toString('utf8'));
     assert.equal(settings.mqttTopic, 'test/collection');

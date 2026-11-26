@@ -66,7 +66,9 @@ function sidebarGroups(records, frames, pickedKey, currentVideo, route, sources 
         const representation = record.ext === "m4s" && SnagBili.representation(url);
         const onMainPage = record.frameId == null || record.frameId <= 0;
         if (representation && onMainPage && currentVideo && representation.cid !== currentVideo.cid) continue;
-        const candidates = byAddress.get(url) || byRendition.get(representation?.identity) || [];
+        // Keep unassigned queue tracks in the existing fragments drawer until the player identifies its part.
+        const unassigned = representation && onMainPage && route?.list && !currentVideo;
+        const candidates = unassigned ? [] : byAddress.get(url) || byRendition.get(representation?.identity) || [];
         if (route && onMainPage && !candidates.length && !(representation && currentVideo?.cid === representation.cid)) {
             const capturedOn = SnagBili.route(record.webUrl);
             if (capturedOn && capturedOn.key !== route.key) continue;
@@ -84,7 +86,7 @@ function sidebarGroups(records, frames, pickedKey, currentVideo, route, sources 
             candidates.find(source => source.item === pointMatch?.item && source.kind) || pointMatch;
         const description = metadata.get(representation?.identity || url);
         const explicitKind = /^(video|audio)\//.exec(record.type || "")?.[1];
-        const bili = representation && (match?.kind || description?.kind || explicitKind || representation.kind) ? representation : null;
+        const bili = !unassigned && representation && (match?.kind || description?.kind || explicitKind || representation.kind) ? representation : null;
         const directEpisode = currentVideo && !representation &&
             (description?.episodeCid === currentVideo.cid || currentVideo.episodeId && main && match?.item === main);
         const info = onMainPage && (directEpisode || bili && bili.cid === currentVideo?.cid) ? currentVideo : null;
@@ -109,8 +111,10 @@ function sidebarGroups(records, frames, pickedKey, currentVideo, route, sources 
         if (kind === "video") group.kind = "video";
         const rendition = bili?.rendition;
         const streamKey = stream?.player && JSON.stringify([record.frameId,frame.documentId || frame.documentStart,
-            stream.player.streamId || "",MediaSources.revisionKey(url)]);
-        const track = { record, kind, streamPlaylist:!!(stream?.player || details), label:match?.label || description?.label || "", codec:match?.codec || description?.codec,
+            stream.player.streamId || "",stream.identity || MediaSources.revisionKey(url)]);
+        const streamLeaf = !!stream?.streamLeaf && point?.key === stream.player.key;
+        const track = { record, kind, streamPlaylist:!!(stream?.player || details), streamLeaf,partSize:details?.partSize,pictureOnly:details?.pictureOnly,
+            label:match?.label || description?.label || "", codec:match?.codec || description?.codec || (streamLeaf ? stream.codec : undefined),
             separate:match?.separate,defaultAudio:match?.defaultAudio,
             fps:match?.fps || description?.fps, bitrate:match?.bitrate || description?.bitrate, size:match?.size || description?.size,
             qualityId:description?.qualityId || match?.qualityId, episodeCid:directEpisode ? info?.cid : undefined, rendition,
@@ -121,13 +125,13 @@ function sidebarGroups(records, frames, pickedKey, currentVideo, route, sources 
             const seen = new Set();
             for (const variant of variants) {
                 const {height,fps,codec,bitrate,repId} = variant;
-                const streamQuality = {url:variant.url,repId,height,fps,codec,bitrate};
+                const streamQuality = {url:variant.url,repId,height,fps,codec,bitrate,masterLayout:details.masterLayout};
                 const key = track.key + "|" + JSON.stringify([variant.identity,height,fps,codec,bitrate]);
                 if (seen.has(key)) continue;
                 seen.add(key);
                 group.tracks.push({...track,key,streamQuality,streamPlaylist:true,streamObserved:variant.observed,observedAt:variant.observedAt,
                     bandwidth:variant.bandwidth || bitrate,label:SnagPlayer.quality("",height,fps),codec,bitrate,fps,
-                    duration:variant.duration || track.duration,pictureOnly:variant.pictureOnly});
+                    duration:variant.duration || track.duration,partSize:variant.partSize,pictureOnly:variant.pictureOnly});
             }
             continue;
         }

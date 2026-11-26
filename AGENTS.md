@@ -16,7 +16,8 @@ Snag 是基于猫抓开发的 Manifest V3 浏览器扩展。侧栏可以识别�
 ## 代码入口
 
 - `js/background.js` 记录网络资源，`js/sidebar-page.js` 在页面和 iframe 中识别播放器，`js/sidebar-catalog.js` 把资源与页面元素组合成卡片。
-- B 站入口是 `js/sidebar-bili.js`，YouTube 播放器识别从 `js/sidebar-player.js` 进入。通用 HLS、DASH 匹配在 `js/sidebar-streams.js`，下载用的清单解析在 `js/media-sources.js`。改通用流程时检查两个站点的既有行为。
+- B 站播放页地址由 `js/bili-route.js` 统一解析。`js/sidebar-bili.js` 核对当前视频和分 P，`js/bili-playback.js` 按 CID 暂存网页收到的播放清单。新增播放入口时，同时核对两个浏览器清单的注入范围和列表回归测试。
+- YouTube 播放器识别从 `js/sidebar-player.js` 进入。通用 HLS、DASH 匹配在 `js/sidebar-streams.js`，下载用的清单解析在 `js/media-sources.js`。改通用流程时检查两个站点的既有行为。
 - `js/media-panel.js` 接收侧栏下载操作，`js/media-jobs.js` 负责任务、重试与临时文件，`js/media-worker.js` 使用内置 FFmpeg 合并或提取音轨。
 
 ## 修改与验证

@@ -76,7 +76,10 @@
       },
       "contentScriptMatches": [
         "http://*/*",
+        "https://*.bilibili.com/list/*",
+        "https://*.bilibili.com/medialist/play/*",
         "https://*.bilibili.com/video/*",
+        "https://*.bilibili.com/watchlater/*",
         "https://*/*",
         "https://www.youtube.com/watch*"
       ],
@@ -110,7 +113,10 @@
       },
       "contentScriptMatches": [
         "http://*/*",
+        "https://*.bilibili.com/list/*",
+        "https://*.bilibili.com/medialist/play/*",
         "https://*.bilibili.com/video/*",
+        "https://*.bilibili.com/watchlater/*",
         "https://*/*",
         "https://www.youtube.com/watch*"
       ],

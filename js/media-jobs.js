@@ -2,6 +2,8 @@
 
 const retention = 10 * 60 * 1000;
 const jobs = new Map(), garbage = new Map(), saves = new Map();
+const MAX_ACTIVE_JOBS = 2;
+const waitingJobs = new Set();
 const retryable = new Set(['mediaSourceFailed','mediaSaveFailed','mediaBadFile','mediaSegmentIncomplete','mediaSegmentUnavailable','mediaSegmentQuality']);
 const jobName = /^job-[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/;
 let root, recentTimer;
@@ -116,7 +118,10 @@ async function fetchPart(file,part,signal) {
     const special = {};
     for (const [name,val] of Object.entries(file.headers || {})) {
         const key = name.toLowerCase();
-        if (key === 'referer' || (sameOrigin && ['origin','user-agent'].includes(key))) special[key] = val;
+        if (key === 'referer') {
+            const referer = file.pageReferrerPolicy ? MediaSources.originReferrer(val,url,file.pageReferrerPolicy) : val;
+            if (referer) special[key] = referer;
+        } else if (sameOrigin && ['origin','user-agent'].includes(key)) special[key] = val;
         if (sameOrigin && key === 'authorization') headers.set(name,val);
     }
     const r = part.range;
@@ -160,7 +165,9 @@ async function checkSpace(job) {
     const {quota,usage} = await navigator.storage.estimate();
     if (!quota) return;
     const remaining = job.sizes.reduce((n,size,i) => n + (job.plan.tracks[i].local ? 0 : Math.max(0,size-(job.counts[i] || 0))),0);
-    const output = job.plan.tracks.length > 1 && !job.plan.copy ? job.total : 0;
+    // Audio extraction can read a sparse local file with a tiny audio payload. Its logical size is not an output estimate.
+    const fullPlaylist = job.mode === 'full' && job.plan.tracks[0].playlist;
+    const output = !job.plan.copy && (job.plan.tracks.length > 1 || fullPlaylist) ? job.total : 0;
     if (remaining + output > quota - usage) throw new Error('mediaSpace');
 }
 async function appendPart(job,index,track,part,out,signal,activity) {
@@ -175,7 +182,7 @@ async function appendPart(job,index,track,part,out,signal,activity) {
             const cr = /^bytes (\d+)-(\d+)\/(\d+|\*)$/i.exec(response.headers.get('content-range') || '');
             if (response.status === 206 && (!cr || Number(cr[1]) !== (range?.offset || 0))) throw sourceError('mediaResponseIncomplete');
             const size = cr && cr[3] !== '*' ? +cr[3] : Number(response.headers.get('content-length')) || 0;
-            if (!part.range && track.parts.length === 1 && size && size !== job.sizes[index]) {
+            if (!part.key && !part.range && track.parts.length === 1 && size && size !== job.sizes[index]) {
                 job.sizes[index] = size;
                 job.total = job.sizes.every(n => n > 0) ? job.sizes.reduce((a,b) => a+b,0) : 0;
                 await checkSpace(job);
@@ -192,9 +199,10 @@ async function appendPart(job,index,track,part,out,signal,activity) {
                 skip = 0;
                 await out.write(block);
                 written += block.length; left -= block.length;
-                if (!job.totalParts) { job.counts[index] += block.length; notify(); }
+                if (!job.totalParts && !part.key) { job.counts[index] += block.length; notify(); }
                 if (left === 0) break;
             }
+            if (!written && part.key && !range && response.status === 200) throw new Error('mediaBadFile');
             if (!written || (cr && written !== Math.min(range?.length ?? Infinity,Number(cr[2])-Number(cr[1])+1))) throw sourceError('mediaResponseIncomplete');
             const next = (range?.offset || 0) + written;
             const end = part.range ? part.range.offset + part.range.length : cr && cr[3] !== '*' ? +cr[3] : next;
@@ -205,23 +213,92 @@ async function appendPart(job,index,track,part,out,signal,activity) {
     } while (remainder);
 }
 
+async function readKeyBytes(track,url,signal,activity) {
+    if (/^data:/i.test(url)) return MediaSources.inlineKey(url);
+    const response = await fetchPart(track,{url},signal);
+    const reader = response.body.getReader(), bytes = new Uint8Array(64);
+    try {
+        const mime = (response.headers.get('content-type') || '').split(';')[0].trim();
+        if (/^(?:text\/html|application\/xhtml\+xml|(?:text|application)\/(?:[\w.+-]+\+)?json)$/i.test(mime)) throw sourceError('mediaUnexpectedResponse');
+        if (response.status === 206 && response.headers.get('content-range') !== 'bytes 0-15/16') throw new Error('mediaBadFile');
+        let size = 0;
+        for (;;) {
+            const {value,done} = await reader.read().catch(transportError);
+            if (done) break;
+            activity();
+            bytes.set(value.subarray(0,bytes.length-size),size);
+            size += value.length;
+            if (size > 16) break;
+        }
+        const prefix = new TextDecoder().decode(bytes.subarray(0,size)).trimStart();
+        if (/^(?:<!doctype\s+html\b|<html\b|<body\b)/i.test(prefix)) throw sourceError('mediaUnexpectedResponse');
+        if (prefix.startsWith('{') || prefix.startsWith('[')) {
+            let json;
+            try { json = JSON.parse(prefix); } catch { /* A binary key can also start with an ASCII bracket. */ }
+            if (json !== undefined || size > 16 && /^(?:\{\s*"|\[\s*["{\d])/.test(prefix)) throw sourceError('mediaUnexpectedResponse');
+        }
+        if (size !== 16) throw new Error('mediaBadFile');
+        return bytes.subarray(0,16);
+    } finally { await reader.cancel().catch(() => {}); }
+}
+// Share one retry budget and import for the key. Each media transfer keeps its own retry budget.
+function decryptionKey(keys,track,url,signal) {
+    if (!keys.has(url)) {
+        const imported = retryPart(signal,() => withNetworkTimeout(signal,'mediaSegmentReadFailed',async (s,touch) => {
+            const bytes = await readKeyBytes(track,url,s,touch);
+            try { return await crypto.subtle.importKey('raw',bytes,'AES-CBC',false,['decrypt']); }
+            finally { bytes.fill(0); }
+        })).catch(error => {
+            keys.delete(url);
+            if (!signal.aborted) error.keyReadFailed = true;
+            throw error;
+        });
+        keys.set(url,imported);
+    }
+    return keys.get(url);
+}
+async function writeTrackPart(job,index,track,part,out,signal,keys) {
+    const read = target => withNetworkTimeout(signal,track.playlist ? 'mediaSegmentReadFailed' : 'mediaFileReadFailed',
+        (s,touch) => appendPart(job,index,track,part,target,s,touch));
+    if (!part.key) return read(out);
+    const key = await decryptionKey(keys,track,part.key.url,signal);
+    // Web Crypto verifies CBC padding for the complete segment, including when the HTTP source uses ranges.
+    const chunks = [];
+    await read({write:chunk => { chunks.push(chunk); }});
+    const size = chunks.reduce((sum,chunk) => sum+chunk.length,0);
+    if (!size || size % 16) throw new Error('mediaBadFile');
+    const cipher = new Uint8Array(size);
+    let offset = 0;
+    for (const chunk of chunks) { cipher.set(chunk,offset); offset += chunk.length; }
+    chunks.length = 0;
+    const iv = Uint8Array.from(part.key.iv.match(/../g),byte => Number.parseInt(byte,16));
+    signal.throwIfAborted();
+    let clear;
+    try { clear = await crypto.subtle.decrypt({name:'AES-CBC',iv},key,cipher); }
+    catch (error) { if (error.name === 'OperationError') throw new Error('mediaBadFile'); throw error; }
+    signal.throwIfAborted();
+    await out.write(clear);
+    if (!job.totalParts) { job.counts[index] += clear.byteLength; notify(); }
+}
+
 // Fail a window as a unit. Join cancelled writers before their scratch directory is removed.
 async function runWindow(items,signal,run) {
     signal.throwIfAborted();
     const controller = new AbortController();
     const cancel = () => controller.abort(signal.reason);
     signal.addEventListener('abort',cancel,{once:true});
+    const fail = error => controller.abort(error);
     try {
         const results = await Promise.allSettled(items.map(async (item,index) => {
-            try { return await run(item,index,controller.signal); }
-            catch (error) { controller.abort(error); throw error; }
+            try { return await run(item,index,controller.signal,fail); }
+            catch (error) { fail(error); throw error; }
         }));
         controller.signal.throwIfAborted();
         return results.map(result => result.value);
     } finally { signal.removeEventListener('abort',cancel); }
 }
 function partRetryDelay(error,attempt) {
-    if (attempt >= 2) return;
+    if (attempt >= 2 || error.keyReadFailed) return;
     const {status,reason} = error.sourceFailure || {};
     if (!error.networkFailure && reason !== 'mediaRequestTimeout' && ![408,429,500,502,503,504].includes(status)) return;
     let delay = 200 * 2 ** attempt;
@@ -253,46 +330,70 @@ async function retryPart(signal,run) {
         }
     }
 }
-function stagePart(job,index,track,part,handle,signal) {
+function stagePart(job,index,part,handle,signal,write) {
     return retryPart(signal,async () => {
         const writer = await handle.createWritable();
+        let received = 0;
         try {
-            await withNetworkTimeout(signal,'mediaSegmentReadFailed',(s,touch) => appendPart(job,index,track,part,writer,s,touch));
+            await write(part,{write:async block => {
+                await writer.write(block);
+                received += block.byteLength;
+                job.counts[index] += block.byteLength;
+                notify();
+            }},signal);
             signal.throwIfAborted();
             await writer.close();
-            return handle.getFile();
+            return await handle.getFile();
         } catch (error) {
+            job.counts[index] -= received;
+            notify();
             await writer.abort().catch(() => {});
             throw error;
         }
     });
 }
-async function receiveParts(job,index,track,out,signal) {
+async function receiveParts(job,index,track,out,signal,abortParts,write) {
     const name = 'parts-' + index;
     const scratch = await job.directory.getDirectoryHandle(name,{create:true});
     const width = Math.max(1,Math.floor(4/job.plan.tracks.length));
-    try {
-        for (let start = 0; start < track.parts.length; start += width) {
-            const batch = track.parts.slice(start,start+width);
-            const files = await runWindow(batch,signal,async (part,slot,s) => {
-                const handle = await scratch.getFileHandle(String(slot),{create:true});
-                return stagePart(job,index,track,part,handle,s);
-            });
-            // Network completion order is independent of media order. Even an oversized part stays on disk.
-            for (const [slot,file] of files.entries()) {
-                for await (const chunk of file.stream()) {
-                    signal.throwIfAborted();
-                    await out.write(chunk);
-                }
-                job.counts[index] += file.size;
-                job.partCounts[index]++;
-                notify();
-                await remove(scratch,String(slot));
-            }
+    const staged = new Map();
+    let next = 0, nextCommit = 0, active = 0;
+    function fill() {
+        // A slow first part can occupy one slot while later parts finish. Bound both active requests and disk backlog.
+        while (!signal.aborted && active < width && next < track.parts.length && next - nextCommit < width + 2) {
+            const slot = next++;
+            active++;
+            const transfer = scratch.getFileHandle(String(slot),{create:true})
+                .then(handle => stagePart(job,index,track.parts[slot],handle,signal,write))
+                .catch(abortParts)
+                .finally(() => { active--; fill(); });
+            staged.set(slot,transfer);
         }
-    } finally { await remove(job.directory,name,true); }
+    }
+    try {
+        fill();
+        while (nextCommit < track.parts.length) {
+            const file = await staged.get(nextCommit);
+            signal.throwIfAborted();
+            for await (const chunk of file.stream()) {
+                signal.throwIfAborted();
+                await out.write(chunk);
+            }
+            await remove(scratch,String(nextCommit));
+            staged.delete(nextCommit++);
+            job.partCounts[index]++;
+            notify();
+            fill();
+        }
+    } catch (error) {
+        abortParts(error);
+        throw error;
+    } finally {
+        await Promise.allSettled(staged.values());
+        await remove(job.directory,name,true);
+    }
 }
-async function receive(job,index,track,signal) {
+async function receive(job,index,track,signal,abortParts,keys = new Map()) {
     if (job.ready[index]) return;
     if (track.local) {
         job.ready[index] = track.local;
@@ -302,6 +403,7 @@ async function receive(job,index,track,signal) {
     const name = 'input-' + index;
     const file = await job.directory.getFileHandle(name,{create:true});
     const out = await file.createWritable();
+    const write = (part,target,s) => writeTrackPart(job,index,track,part,target,s,keys);
     job.counts[index] = 0;
     try {
         if (track.recording) {
@@ -313,10 +415,8 @@ async function receive(job,index,track,signal) {
                 const block = Uint8Array.from(atob(chunk),c => c.charCodeAt(0));
                 await out.write(block); job.counts[index] += block.length; notify();
             }
-        } else if (job.totalParts) await receiveParts(job,index,track,out,signal);
-        else for (const part of track.parts)
-            await withNetworkTimeout(signal,track.playlist ? 'mediaSegmentReadFailed' : 'mediaFileReadFailed',
-                (s,touch) => appendPart(job,index,track,part,out,s,touch));
+        } else if (job.totalParts) await receiveParts(job,index,track,out,signal,abortParts,write);
+        else for (const part of track.parts) await write(part,out,signal);
         signal.throwIfAborted();
         await out.close();
         job.ready[index] = file;
@@ -341,18 +441,19 @@ function runCodec(message,signal) {
         worker.postMessage(message);
     });
 }
-async function receiveTrack(job,index,track,signal) {
+async function receiveTrack(job,index,track,signal,abortParts) {
+    const keys = new Map();
     try {
-        if (track.playlist && !job.totalParts) await retryPart(signal,() => receive(job,index,track,signal));
-        else await receive(job,index,track,signal);
+        if (track.playlist && !job.totalParts) await retryPart(signal,() => receive(job,index,track,signal,abortParts,keys));
+        else await receive(job,index,track,signal,abortParts,keys);
     }
     catch (error) {
         if (signal.aborted || error.name === 'QuotaExceededError' || error.message === 'mediaSpace' ||
-            track.parts?.length !== 1 || !track.backups?.length) throw error;
+            track.playlist || track.parts?.length !== 1 || !track.backups?.length) throw error;
         // Alternate URLs all describe the same rendition. Start this input
         // afresh so bytes from separate origins are never stitched together.
         for (const url of track.backups) {
-            try { await receive(job,index,{...track,parts:[{url}]},signal); return; }
+            try { await receive(job,index,{...track,parts:[{url}]},signal,abortParts); return; }
             catch (next) {
                 if (signal.aborted || next.name === 'QuotaExceededError' || next.message === 'mediaSpace') throw next;
                 error = next;
@@ -500,7 +601,7 @@ async function prepareOutput(job,signal,tryManifest) {
     await checkSpace(job);
     if (job.totalParts) {
         for (let start = 0; start < tracks.length; start += 4)
-            await runWindow(tracks.slice(start,start+4),signal,(t,i,s) => receiveTrack(job,start+i,t,s));
+            await runWindow(tracks.slice(start,start+4),signal,(t,i,s,abort) => receiveTrack(job,start+i,t,s,abort));
     }
     else {
         const transfers = await Promise.allSettled(tracks.map((t,i) => receiveTrack(job,i,t,signal)));
@@ -562,15 +663,44 @@ async function processJob(job) {
     } finally {
         job.task = null;
         if (job.expires) job.expiryTimer = setTimeout(() => reap().catch(console.warn),Math.max(0,job.expires - Date.now()));
+        drainQueue();
         notify(true);
     }
 }
-function launch(job) {
+function validateRequest(req) {
+    if (!['full','audio','video'].includes(req?.mode) || !Array.isArray(req.files) || req.files.length > 2) throw new Error('mediaBadFile');
+    if (req.youtube) {
+        const q = req.youtube;
+        if (req.files.length || !/^[\w-]{11}$/.test(q.videoId) || !Number.isInteger(q.height) || q.height < 1 || q.height > 16384 ||
+            !Number.isFinite(q.fps) || q.fps < 0 || q.fps > 240 || !Number.isFinite(q.duration) || q.duration <= 0 ||
+            (q.manifests != null && (!Array.isArray(q.manifests) || q.manifests.length > 2))) throw new Error('mediaBadFile');
+    } else if (!req.files.length || req.files.some(f => !f || !f.local && !f.recording && !/^https?:\/\//i.test(f.url))) {
+        throw new Error('mediaBadFile');
+    }
+}
+function drainQueue() {
+    let active = [...jobs.values()].filter(job => job.task).length;
+    for (const job of waitingJobs) {
+        if (active >= MAX_ACTIVE_JOBS) break;
+        waitingJobs.delete(job);
+        job.state = 'downloading';
+        job.controller = new AbortController();
+        job.task = processJob(job);
+        active++;
+    }
+}
+function enqueue(job) {
     clearTimeout(job.expiryTimer);
-    job.state = 'downloading'; job.error = null; job.sourceFailure = null; job.expires = 0;
-    job.controller = new AbortController();
-    job.task = processJob(job); notify(true);
+    job.state = 'queued'; job.error = null; job.sourceFailure = null; job.expires = 0;
+    job.segmentProgress = undefined;
+    waitingJobs.add(job);
+    drainQueue();
+    notify(true);
     return view(job);
+}
+function activeCopy(request) {
+    return [...jobs.values()].find(j => j.tabId === request.tabId && j.key === request.key && j.mode === request.mode &&
+        (j.task || j.state === 'queued'));
 }
 async function command(m) {
     await initialized;
@@ -580,23 +710,33 @@ async function command(m) {
     if (m.op === 'list') return [...jobs.values()].map(view);
     if (m.op === 'start') {
         const req = m.request;
-        if (!['full','audio','video'].includes(req?.mode) || !Array.isArray(req.files) || req.files.length > 2) throw new Error('mediaBadFile');
-        if (req.youtube) {
-            const q = req.youtube;
-            if (req.files.length || !/^[\w-]{11}$/.test(q.videoId) || !Number.isInteger(q.height) || q.height < 1 || q.height > 16384 ||
-                !Number.isFinite(q.fps) || q.fps < 0 || q.fps > 240 || !Number.isFinite(q.duration) || q.duration <= 0 ||
-                (q.manifests != null && (!Array.isArray(q.manifests) || q.manifests.length > 2))) throw new Error('mediaBadFile');
-        } else if (!req.files.length) throw new Error('mediaBadFile');
-        const duplicate = [...jobs.values()].find(j => j.tabId === req.tabId && j.key === req.key && j.mode === req.mode && j.task);
+        validateRequest(req);
+        const duplicate = activeCopy(req);
         if (duplicate) return view(duplicate);
         const job = {id:'job-' + crypto.randomUUID(),key:req.key,title:req.title,tabId:req.tabId,windowId:req.windowId,mode:req.mode,request:req,ready:[],counts:[]};
-        jobs.set(job.id,job); return launch(job);
+        jobs.set(job.id,job); return enqueue(job);
     }
     const job = jobs.get(m.id);
     if (!job) return;
-    if (m.op === 'retry' && job.request && job.state === 'failed' && !job.task && job.expires > Date.now()) return launch(job);
+    if (m.op === 'retry' && job.request && job.state === 'failed' && !job.task && job.expires > Date.now()) {
+        const duplicate = activeCopy(job);
+        if (duplicate) return view(duplicate);
+        if (m.request != null) {
+            const req = m.request;
+            validateRequest(req);
+            if (req.key !== job.key || req.mode !== job.mode || req.tabId !== job.tabId) throw new Error('mediaBadFile');
+            if (!job.ready.some(Boolean)) {
+                job.request = req;
+                job.plan = null; job.sizes = []; job.total = 0;
+            }
+        }
+        return enqueue(job);
+    }
     if (m.op === 'cancel' || m.op === 'clear') {
-        if (!job.task) { clearTimeout(job.expiryTimer); jobs.delete(job.id); await discard(job); notify(true); return; }
+        if (!job.task) {
+            waitingJobs.delete(job); jobs.delete(job.id); clearTimeout(job.expiryTimer);
+            await discard(job); notify(true); return;
+        }
         job.controller.abort();
         await job.task;
         if (job.state !== 'done') { jobs.delete(job.id); await discard(job); notify(true); }

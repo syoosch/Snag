@@ -4,6 +4,7 @@ const $id = id => document.getElementById(id);
 const types = { video:"video", image:"sideImages", audio:"audio", other:"sideOther", all:"sideAll" };
 const filterButtons = new Map();
 const records = new Map(), frames = new Map(), rows = new Map();
+const transfers = new Map();
 const srcdocFrames = new Map();
 const selections = new Set(), choices = new Map(), downloads = new Map(), outcomes = new Map();
 const fixedTab = Number(new URLSearchParams(location.search).get("tabId")) || null;
@@ -75,12 +76,16 @@ function choice(group) {
         return tracks.reduce((a,b) => (a.record.getTime || 0) > (b.record.getTime || 0) ? a : b);
     return tracks[0] || group.tracks[0];
 }
-function title(group, record) {
+function title(group, record, fileName = record.name) {
     if (group.point?.ad) return i18n.sideAdvertisement;
     if (group.info?.title) return group.info.title;
     if (group.point?.title) return group.point.title;
     if (group.biliId) return i18n(types[group.kind]) + " · " + group.biliId;
-    return record.name || record.title || i18n(types[group.kind]);
+    const pageTitle = record.title?.trim();
+    if (group.kind === "video" && group.point?.kind === "video" && pageTitle && pageTitle !== "NULL" &&
+        (isM3U8(record) || isMPD(record) || !groups.some(g => g.kind === "video" && !g.playerOnly &&
+            g.point?.kind === "video" && !g.point.ad && g.point.key !== group.point.key))) return pageTitle;
+    return fileName || record.title || i18n(types[group.kind]);
 }
 function stopPicker() {
     if (!picking) return;
@@ -198,6 +203,26 @@ function recordsWithPageFiles() {
     return combined;
 }
 
+async function readBiliPlayer(id,route,cid) {
+    const [reply] = await chrome.scripting.executeScript({target:{tabId:id,frameIds:[0]},world:"MAIN",
+        func:SnagBili.readPlayer,args:[route,cid || null]}).catch(() => []);
+    return reply?.result;
+}
+function listSelectionChanged(route,live,info) {
+    if (!live || live.pending || SnagBili.route(live.page)?.key !== route.key) return true;
+    return live.selection ? live.selection.id !== info.id || live.selection.cid !== info.cid : !route.id;
+}
+function clearVideoPart() {
+    if (!currentVideo) return;
+    currentVideo = null;
+    videoSources = [];
+    publicLookup?.abort();
+    publicTracks = [];
+    publicTracksAt = 0;
+    frames.get(0)?.port.postMessage({type:"videoContext",route:videoRoute.key,info:null});
+    scheduleRender();
+}
+
 // Read the site's public part list when navigation reused its player and the original HTML still describes the previous video.
 function resolveVideo(retry = false) {
     if (!enabled || blocked || !videoRoute) return;
@@ -208,25 +233,25 @@ function resolveVideo(retry = false) {
     const timeout = setTimeout(() => controller.abort(),4000);
     videoLookup = (async () => {
         try {
-            const readPlayer = async cid => (await chrome.scripting.executeScript({target:{tabId,frameIds:[0]},world:"MAIN",
-                func:SnagBili.readPlayer,args:[route,cid || null]}).catch(() => []))[0]?.result;
-            let live = await readPlayer(currentVideo?.cid);
+            let live = await readBiliPlayer(tabId,route,currentVideo?.cid);
             if (epoch !== generation) return;
             if (live && SnagBili.route(live.page)?.key !== route.key) return;
-            if (live && !route.bangumi && !live.observesLists) {
-                // This tab may predate the extension, or may have reached /video through same-document navigation.
-                await chrome.scripting.executeScript({target:{tabId,frameIds:[0]},world:"MAIN",files:["js/bili-playback.js"]}).catch(() => {});
+            if (live && (!live.knowsRoute || !route.bangumi && !live.observesLists)) {
+                const files = [];
+                if (!live.knowsRoute) files.push("js/bili-route.js");
+                // An already open tab can enter a player through same-document navigation.
+                if (!route.bangumi && !live.observesLists) files.push("js/bili-playback.js");
+                await chrome.scripting.executeScript({target:{tabId,frameIds:[0]},world:"MAIN",files}).catch(() => {});
                 if (epoch !== generation) return;
             }
+            const target = live?.selection ? {...route,...live.selection} : route;
             let info;
             if (route.bangumi) {
                 const episode = live?.episode, activeCid = episode?.active?.cid;
                 const activeId = episode?.active?.epId || (!activeCid && episode?.canonicalEp);
                 if (route.seasonId && currentVideo && (activeCid && currentVideo.cid !== String(activeCid) ||
                     activeId && currentVideo.episodeId !== String(activeId))) {
-                    currentVideo = null; videoSources = [];
-                    frames.get(0)?.port.postMessage({type:"videoContext",route:route.key,info:null});
-                    scheduleRender();
+                    clearVideoPart();
                 }
                 info = SnagBili.episodeInfo(route,live?.episode);
                 if (info && !info.episodeLabel && info.cid === currentVideo?.cid && currentVideo.episodeLabel) info = currentVideo;
@@ -237,20 +262,26 @@ function resolveVideo(retry = false) {
                     if (response?.ok) info = SnagBili.episodeInfo(route,live?.episode,(await response.json()).result) || info;
                 }
             } else {
-                const initial = SnagBili.videoInfo(route,live?.info), player = SnagBili.videoInfo(route,live?.playing);
+                if (route.list && (!live || live.pending || !target.id)) { clearVideoPart(); return; }
+                if (target.cid && currentVideo && target.cid !== currentVideo.cid) clearVideoPart();
+                const initial = SnagBili.videoInfo(target,live?.info), player = SnagBili.videoInfo(target,live?.playing);
                 info = initial || currentVideo || player;
                 if (!initial && player?.title && info?.cid === player.cid) info = {...info,title:player.title};
             }
             if (!route.bangumi && !info?.title) {
                 const api = new URL("https://api.bilibili.com/x/web-interface/view");
-                if (/^av/i.test(route.id)) api.searchParams.set("aid",route.id.slice(2));
-                else api.searchParams.set("bvid",route.id);
+                if (/^av/i.test(target.id)) api.searchParams.set("aid",target.id.slice(2));
+                else api.searchParams.set("bvid",target.id);
                 const response = await fetch(api,{credentials:"omit",signal:controller.signal}).catch(() => null);
-                if (response?.ok) info = SnagBili.videoInfo(route,(await response.json()).data) || info;
-                if (info && epoch === generation && live && live.menuCid !== info.cid) live = await readPlayer(info.cid);
+                if (response?.ok) info = SnagBili.videoInfo(target,(await response.json()).data) || info;
+                if (info && epoch === generation && live && (route.list || live.menuCid !== info.cid)) {
+                    live = await readBiliPlayer(tabId,route,info.cid);
+                    if (epoch !== generation) return;
+                    if (route.list && listSelectionChanged(route,live,info)) { clearVideoPart(); return; }
+                }
             }
             if (epoch !== generation || !info || live && SnagBili.route(live.page)?.key !== route.key) return;
-            if (currentVideo && currentVideo.cid !== info.cid) videoSources = [];
+            if (currentVideo && currentVideo.cid !== info.cid) clearVideoPart();
             const sources = SnagBili.tracks(live?.dash).filter(source => SnagBili.representation(source.url)?.cid === info.cid);
             const menuMatches = String(live?.menuCid) === info.cid;
             const playback = menuMatches && live?.playback;
@@ -289,8 +320,8 @@ function scanFrame(id, frameId, state) {
 }
 
 async function recoverPublicTracks(epoch, id) {
-    const info = currentVideo, state = frames.get(0);
-    if (!info || videoRoute?.bangumi || !state?.ready || Date.now()-publicTracksAt < 60000) return;
+    const info = currentVideo, route = videoRoute, state = frames.get(0);
+    if (!info?.id || route?.bangumi || !state?.ready || Date.now()-publicTracksAt < 60000) return;
     const known = sidebarGroups(recordsWithPageFiles(),frames,null,info,videoRoute,videoSources);
     if (!publicTracks.length && known.some(group => group.biliId === info.cid && group.kind === "video" &&
         group.tracks.filter(track => track.kind === "video" && track.codec).length >= 2 &&
@@ -300,16 +331,19 @@ async function recoverPublicTracks(epoch, id) {
     const timeout = setTimeout(() => controller.abort(),5000);
     try {
         const api = new URL("https://api.bilibili.com/x/player/playurl");
-        if (/^av/i.test(videoRoute.id)) api.searchParams.set("avid",videoRoute.id.slice(2));
-        else api.searchParams.set("bvid",videoRoute.id);
+        if (/^av/i.test(info.id)) api.searchParams.set("avid",info.id.slice(2));
+        else api.searchParams.set("bvid",info.id);
         api.searchParams.set("cid",info.cid);
         api.searchParams.set("fnval","16");
         const response = await fetch(api,{credentials:"omit",signal:controller.signal});
         if (!response.ok) return;
         const body = await response.json();
-        if (body.code !== 0 || epoch !== generation || frames.get(0) !== state || currentVideo?.cid !== info.cid) return;
+        if (body.code !== 0 || epoch !== generation) return;
         const tracks = SnagBili.tracks(body.data?.dash).filter(source => SnagBili.representation(source.url)?.cid === info.cid);
         if (!tracks.length) return;
+        // A queue can advance without navigation while this public request is in flight.
+        if (route.list && listSelectionChanged(route,await readBiliPlayer(id,route,info.cid),info)) return;
+        if (epoch !== generation || frames.get(0) !== state || currentVideo?.cid !== info.cid) return;
         publicTracks = tracks;
         publicTracksAt = Date.now();
         const duration = Number(body.data.dash.duration);
@@ -365,6 +399,7 @@ async function rescan() {
             return;
         }
         snapshot.records.forEach(addRecord);
+        for (const sample of snapshot.transfers || []) SnagFormat.rememberTransfer(transfers,sample);
         const ready = [...frames].filter(([,state]) => state.ready);
         const results = await Promise.allSettled(ready.map(async ([frameId,state]) => {
             for (const [url,entry] of state.streamLists || []) {
@@ -413,7 +448,7 @@ function connectFrame(frame, epoch, canInject = true) {
         frames.delete(frame.frameId);
         if (canInject && !state.ready && disconnected) {
             // Tabs that were already open during installation have no content script yet.
-            chrome.scripting.executeScript({ target:{ tabId:targetTab, frameIds:[frame.frameId] }, files:["js/sidebar-bili.js","js/media-formats.js","js/sidebar-player.js","js/sidebar-page.js"] })
+            chrome.scripting.executeScript({ target:{ tabId:targetTab, frameIds:[frame.frameId] }, files:["js/bili-route.js","js/sidebar-bili.js","js/media-formats.js","js/sidebar-player.js","js/sidebar-page.js"] })
                 .then(() => connectFrame(frame,epoch,false)).catch(() => {});
         }
         if (picked?.serial === state.serial) { picked = null; say(i18n.sideGone); }
@@ -424,7 +459,7 @@ function connectFrame(frame, epoch, canInject = true) {
         if (epoch !== generation || frames.get(frame.frameId) !== state) return;
         if (message.type === "elements") {
             if (frame.frameId === 0 && videoRoute && enabled) {
-                if (!currentVideo && !videoRoute.bangumi && message.info?.route === videoRoute.key) currentVideo = message.info;
+                if (!currentVideo && !videoRoute.bangumi && !videoRoute.list && message.info?.route === videoRoute.key) currentVideo = message.info;
                 else if (currentVideo && !state.ready) port.postMessage({type:"videoContext",info:currentVideo});
                 else resolveVideo();
             }
@@ -439,7 +474,9 @@ function connectFrame(frame, epoch, canInject = true) {
             }
             state.playlists = message.playlists;
             state.segments = message.segments;
+            state.videoSegments = message.videoSegments;
             state.documentStart = message.documentStart;
+            state.referrerPolicy = message.referrerPolicy;
             state.watchRevision = message.watchRevision;
             syncPlayerFiles(targetTab,state).catch(() => {});
             if (picked?.serial === state.serial && !state.items.some(item => item.key === picked.key)) {
@@ -456,6 +493,12 @@ function connectFrame(frame, epoch, canInject = true) {
         } else if (message.type === "playlistText" && enabled && !blocked) {
             receivePlaylistText(state,message);
             scheduleRender();
+        } else if (message.type === "leafCodec" && enabled && !blocked) {
+            const entry = state.streamLists?.get(message.playlist);
+            if (entry?.probeUrl && entry.probeUrl === message.url) {
+                entry.codec = message.codec;
+                scheduleRender();
+            }
         } else if (message.type === "scanFiles" && enabled && !state.requestedScan) {
             acceptPageFiles(frame.frameId, state, message.files).catch(() => {});
         } else if (message.type === "playbackList" && frame.frameId === 0 && message.route === videoRoute?.key && enabled && !blocked) {
@@ -516,6 +559,7 @@ async function refreshTab(id, nextUrl) {
     scanLabel = "sideRescan";
     for (const frame of frames.values()) frame.port.disconnect();
     frames.clear(); srcdocFrames.clear(); records.clear(); selections.clear(); choices.clear(); outcomes.clear(); tierRequests.clear();
+    transfers.clear();
     for (const row of rows.values()) removeRow(row);
     rows.clear();
     tabId = G.tabId = id;
@@ -549,6 +593,7 @@ async function refreshTab(id, nextUrl) {
         blocked = snapshot.blocked;
         if (blocked) records.clear();
         else snapshot.records.forEach(addRecord);
+        for (const sample of snapshot.transfers || []) SnagFormat.rememberTransfer(transfers,sample);
         if (availableTab && !blocked) {
             const list = await chrome.webNavigation.getAllFrames({ tabId:id });
             for (const frame of list || []) connectFrame(frame, epoch);
@@ -613,6 +658,11 @@ function stopDetail(row) {
     pane.hidden = true;
     row.node.querySelector(".toggle-details").setAttribute("aria-expanded","false");
 }
+function fileDetailText(group,track) {
+    const record = track.record, duration = group.info?.duration || group.point?.duration || track.duration;
+    const size = isM3U8(record) || isMPD(record) ? trackSizeLabel(track,duration) : record.size > 0 && bytes(record.size);
+    return [record.name,record.type,...encodingStats(track,duration),size].filter(Boolean).join(" · ");
+}
 function showDetails(row) {
     stopDetail(row);
     const group = row.group;
@@ -638,9 +688,7 @@ function showDetails(row) {
     if (group.kind === "image") {
         const img = el("img"); img.alt = title(group, record); img.src = record.url; pane.append(img);
     } else if (["video","audio"].includes(group.kind)) row.stopPreview = detailPreview(pane,group,track);
-    const duration = group.info?.duration || group.point?.duration || track.duration;
-    const size = isM3U8(record) || isMPD(record) ? trackSizeLabel(track,duration) : record.size > 0 && bytes(record.size);
-    pane.append(el("div", [record.name,record.type,...encodingStats(track,duration),size].filter(Boolean).join(" · "), "detail-info"));
+    pane.append(el("div",fileDetailText(group,track),"detail-info"));
     const link = el("a",record.url);
     link.target = "_blank"; link.rel = "noreferrer"; link.href = record.url;
     pane.append(link);
@@ -754,7 +802,8 @@ function updateRow(row, group) {
         row.outcome = outcome;
         const status = node.querySelector(".download-state");
         status.textContent = outcome?.text || "";
-        if (job) jobActions(status,job,!activeJob(job),job.mode !== mainDownloadMode(group,track));
+        if (job) jobActions(status,job,!activeJob(job),job.mode !== mainDownloadMode(group,track),
+            () => startMedia(row.group,job.mode,job));
         else if (outcome?.tabId || outcome?.fileId != null) {
             const follow = el("button",outcome.tabId ? i18n.sideProgress : i18n.sideShowFile,"text-btn");
             follow.onclick = () => {
@@ -765,7 +814,10 @@ function updateRow(row, group) {
         }
     }
     thumbnail(node.querySelector(".thumb"),group,record);
-    if (!node.querySelector(".details").hidden && (row.activeTrack !== track.key || row.detailPoint !== point?.key || row.detailUrl !== record.url)) showDetails(row);
+    if (!node.querySelector(".details").hidden) {
+        if (row.activeTrack !== track.key || row.detailPoint !== point?.key || row.detailUrl !== record.url) showDetails(row);
+        else if (isM3U8(record) || isMPD(record)) node.querySelector(".detail-info").textContent = fileDetailText(group,track);
+    }
     row.activeTrack = track.key;
 }
 function removeRow(row) {
@@ -797,7 +849,7 @@ function resolvePickedFile() {
 
 function render() {
     const files = recordsWithPageFiles();
-    const streams = enabled && !blocked ? genericStreamMatches(files,frames,true) : new Map();
+    const streams = enabled && !blocked ? genericStreamMatches(files,frames,true,transfers) : new Map();
     groups = blocked ? [] : sidebarGroups(files, frames, picked?.key, currentVideo, videoRoute, [...publicTracks,...videoSources],streams);
     if (!enabled) groups = groups.filter(group => !group.playerOnly);
     resolvePickedFile();
@@ -943,6 +995,10 @@ function downloadState(id,state,error) {
 }
 chrome.downloads.onChanged.addListener(event => downloadState(event.id,event.state?.current,event.error?.current));
 chrome.runtime.onMessage.addListener(message => {
+    if (message.Message === "sidebarSegmentTransfer" && message.tabId === tabId && enabled && !blocked) {
+        SnagFormat.rememberTransfer(transfers,message.sample);
+        scheduleRender();
+    }
     if (message.Message === "popupAddData" && message.data?.tabId === tabId) {
         if (message.removed) {
             const old = message.removed;
@@ -963,10 +1019,12 @@ chrome.tabs.onUpdated.addListener((id, change, tab) => {
 chrome.webNavigation.onCommitted.addListener(event => {
     if (event.tabId === tabId && event.frameId === 0) refreshTab(tabId);
 });
-chrome.webNavigation.onHistoryStateUpdated.addListener(event => {
+function playbackNavigation(event) {
     if (event.tabId === tabId && event.frameId === 0 &&
         (SnagBili.route(event.url)?.key !== videoRoute?.key || SnagPlayer.youtubeId(event.url) !== watchId)) refreshTab(tabId,event.url);
-});
+}
+chrome.webNavigation.onHistoryStateUpdated.addListener(playbackNavigation);
+chrome.webNavigation.onReferenceFragmentUpdated.addListener(playbackNavigation);
 chrome.webNavigation.onDOMContentLoaded.addListener(event => {
     if (event.tabId === tabId && !loading) connectFrame(event,generation);
 });

@@ -113,7 +113,8 @@ async function convert({inputs, output, mode, paired, expected}) {
         const map = mode === 'audio' ? ['-map','0:a:0'] : mode === 'video' ? ['-map','0:V:0'] :
             paired ? ['-map', (audioFirst ? '1' : '0') + ':V:0','-map',(audioFirst ? '0' : '1') + ':a:0'] :
             ['-map','0:V:0?','-map','0:a?'];
-        const exec = type => core.exec(...flags, ...args, ...map, '-c','copy','-map_metadata','-1','-f',type,'/output');
+        const exec = type => core.exec(...flags, ...args, ...map, '-c','copy','-map_metadata','-1',
+            ...(type === 'mp4' ? ['-movflags','+faststart'] : []),'-f',type,'/output');
         missing = false;
         if (exec(format) !== 0) {
             if (missing) throw new Error(mode === 'video' ? 'mediaNoVideo' : 'mediaNoAudio');

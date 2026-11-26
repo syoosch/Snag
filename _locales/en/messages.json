@@ -211,6 +211,7 @@
   "mediaUnavailable": {"message":"Local downloads are unavailable"},
   "mediaClear": {"message":"Clear now"},
   "mediaCancel": {"message":"Cancel"},
+  "mediaQueued": {"message":"Queued"},
   "mediaLocalTool": {"message":"Local media tools"},
   "mediaPickFiles": {"message":"Choose media files"},
   "mediaTasks": {"message":"Downloads"},

@@ -7,7 +7,7 @@ const actions = document.getElementById('tool-actions');
 let ownTabId;
 chrome.tabs.getCurrent().then(tab => { ownTabId = tab?.id; });
 let imported = [], activeId, expiry;
-const stateKeys = {downloading:'sideDownloading',processing:'mediaMerging',saving:'mediaSaving',done:'downloaded'};
+const stateKeys = {queued:'mediaQueued',downloading:'sideDownloading',processing:'mediaMerging',saving:'mediaSaving',done:'downloaded'};
 function buttons() {
     const count = imported.length || picker.files.length;
     for (const b of actions.querySelectorAll('button')) b.disabled = !count || count > 2 || (count === 2 && b.dataset.action !== 'merge');
@@ -33,7 +33,10 @@ channel.onmessage = ({data}) => {
 };
 async function run(data) {
     const task = await submit(data);
-    if (task) { activeId = task.id; clearTimeout(expiry); imported = []; picker.value = ''; buttons(); label.textContent = i18n.sideDownloading; }
+    if (task) {
+        activeId = task.id; clearTimeout(expiry); imported = []; picker.value = ''; buttons();
+        label.textContent = i18n[stateKeys[task.state]] || i18n.sideDownloading;
+    }
 }
 function showError(e) { label.textContent = i18n[e.message] || i18n.mediaBadFile; }
 async function importFiles(files) {

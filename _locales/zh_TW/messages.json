@@ -80,17 +80,39 @@
   "sidePick": {
     "message": "到網頁上選"
   },
-  "sideRescan": { "message": "重新掃描" },
-  "sideScanning": { "message": "掃描中…" },
-  "sideScanned": { "message": "已掃描" },
-  "sideScanNoMedia": { "message": "尚未辨識到目前影片的這類檔案。播放幾秒後再掃描，或點「重新載入網頁」。" },
-  "sideScanFailed": { "message": "暫時無法讀取網頁。載入後再點「重新掃描」，或直接點「重新載入網頁」。" },
-  "sideReloadCapture": { "message": "重新載入網頁" },
-  "sideListen": { "message": "試聽" },
-  "sidePauseListening": { "message": "暫停試聽" },
-  "sideAudioTrack": { "message": "音軌試聽" },
-  "sideAudioGesture": { "message": "先在原網頁點一下，再回來點「試聽」。" },
-  "sideAudioUnavailable": { "message": "這條音軌暫時無法試聽，仍可下載檔案。" },
+  "sideRescan": {
+    "message": "重新掃描"
+  },
+  "sideScanning": {
+    "message": "掃描中…"
+  },
+  "sideScanned": {
+    "message": "已掃描"
+  },
+  "sideScanNoMedia": {
+    "message": "尚未辨識到目前影片的這類檔案。播放幾秒後再掃描，或點「重新載入網頁」。"
+  },
+  "sideScanFailed": {
+    "message": "暫時無法讀取網頁。載入後再點「重新掃描」，或直接點「重新載入網頁」。"
+  },
+  "sideReloadCapture": {
+    "message": "重新載入網頁"
+  },
+  "sideListen": {
+    "message": "試聽"
+  },
+  "sidePauseListening": {
+    "message": "暫停試聽"
+  },
+  "sideAudioTrack": {
+    "message": "音軌試聽"
+  },
+  "sideAudioGesture": {
+    "message": "先在原網頁點一下，再回來點「試聽」。"
+  },
+  "sideAudioUnavailable": {
+    "message": "這條音軌暫時無法試聽，仍可下載檔案。"
+  },
   "sideCancelPick": {
     "message": "取消點選"
   },
@@ -124,10 +146,18 @@
   "sideUnavailable": {
     "message": "開啟一般網頁，即可在此選擇資源。"
   },
-  "sideAdvertisement": {"message":"廣告"},
-  "sidePlayingNow": {"message":"正在播放"},
-  "sidePlayerNoFile": {"message":"尚未找到下載檔案"},
-  "sideProtectedPlayer": {"message":"此影片受保護"},
+  "sideAdvertisement": {
+    "message": "廣告"
+  },
+  "sidePlayingNow": {
+    "message": "正在播放"
+  },
+  "sidePlayerNoFile": {
+    "message": "尚未找到下載檔案"
+  },
+  "sideProtectedPlayer": {
+    "message": "此影片受保護"
+  },
   "sideWaiting": {
     "message": "已選取。請播放這段媒體或等圖片載入，找到對應檔案後會自動顯示。"
   },
@@ -146,68 +176,270 @@
   "sideSaveSegment": {
     "message": "下載片段"
   },
-  "sideEstimatedSize": {"message":"約 $size$","placeholders":{"size":{"content":"$1"}}},
-  "sideCardFormat": {"message":"格式"},
-  "sideSavedFormat": {"message":"儲存格式"},
-  "sideExpectedFormat": {"message":"預計格式"},
-  "sideCardSize": {"message":"大小"},
-  "sidePictureSize": {"message":"畫面大小"},
-  "sideCodec": {"message":"編碼"},
-  "sideExpectedCodec": {"message":"預計編碼"},
-  "sideAutomatic": {"message":"自動"},
-  "sideVersion": {"message":"版本"},
-  "sideDocument": {"message":"文件"},
-  "sideGenericFile": {"message":"檔案"},
-  "mediaCodecUnavailable": {"message":"網頁未提供所選編碼，請改選其他版本。"},
-  "mergePreparing": {"message":"正在下載畫面與聲音。兩項都準備好後，Snag 會在本頁自動合併。"},
-  "mergeFileReady": {"message":"已就緒"},
-  "mergeSending": {"message":"正在準備本機合併"},
-  "mergeProcessing": {"message":"正在本機合併影音"},
-  "mergeFinished": {"message":"已合併，可在瀏覽器下載記錄中查看"},
-  "mergeUnconfirmed": {"message":"合併工具尚未確認收到兩個檔案。可查看詳細資訊，或重新傳送已下載的檔案。"},
-  "mergeRetrySend": {"message":"重新傳送"},
-  "mergeToolDetails": {"message":"查看合併詳情"},
-  "mergeMissingFiles": {"message":"工作缺少影像或聲音，請回到側欄重新下載"},
-  "mergeDownloadFailed": {"message":"有一項下載失敗。點選該項旁的重新下載即可繼續。"},
-  "mergeSetupFailed": {"message":"暫時無法準備下載。請回到影片側欄重新開始合併。"},
-  "mergeNoProgress": {"message":"30 秒未收到資料"},
-  "sideEpisode": {"message":"第$index$集","placeholders":{"index":{"content":"$1"}}},
-  "sidePlayingResolution": {"message":"網頁播放 $quality$","placeholders":{"quality":{"content":"$1"}}},
-  "sideDownloadAt": {"message":"下載 $quality$","placeholders":{"quality":{"content":"$1"}}},
-  "sideTier": {"message":"畫質"},
-  "sideEncodings": {"message":"編碼版本"},
-  "sideCapturedVersion": {"message":"已擷取的版本"},
-  "sideTierOnPage": {"message":"$name$（切換網頁畫質）","placeholders":{"name":{"content":"$1"}}},
-  "sideTierNoFile": {"message":"$name$（暫無檔案）","placeholders":{"name":{"content":"$1"}}},
-  "sideTierSwitching": {"message":"正在等待網頁切換畫質…"},
-  "sideTierFailed": {"message":"網頁暫未提供「$name$」的檔案，已保留原本的下載選項。","placeholders":{"name":{"content":"$1"}}},
-  "mediaDownloadVideo": {"message":"下載影片"},
-  "mediaChoose": {"message":"下載方式"},
-  "mediaAudioOnly": {"message":"僅下載音訊"},
-  "mediaVideoOnly": {"message":"下載無聲影片"},
-  "mediaFindAudio": {"message":"重新尋找聲音"},
-  "mediaNoAudio": {"message":"未找到音軌"},
-  "mediaNoVideo": {"message":"未找到影像"},
-  "mediaMerging": {"message":"正在合併影音"},
-  "mediaExtracting": {"message":"正在擷取"},
-  "mediaSaving": {"message":"正在儲存"},
-  "mediaSpace": {"message":"暫存空間不足"},
-  "mediaSourceFailed": {"message":"下載中斷"},
-  "mediaSegments": {"message":"正在收集片段"},
-  "mediaSegmentIncomplete": {"message":"影片片段未收齊"},
-  "mediaSegmentUnavailable": {"message":"YouTube 無法播放這個版本"},
-  "mediaSegmentQuality": {"message":"未取得所選畫質"},
-  "mediaSaveFailed": {"message":"儲存失敗"},
-  "mediaBadFile": {"message":"無法處理這個檔案"},
-  "mediaProtected": {"message":"此播放清單使用了加密"},
-  "mediaLive": {"message":"直播請使用詳細資料中的錄製工具"},
-  "mediaUnavailable": {"message":"本機下載暫不可用"},
-  "mediaClear": {"message":"立即清理"},
-  "mediaCancel": {"message":"取消"},
-  "mediaLocalTool": {"message":"本機影音處理"},
-  "mediaPickFiles": {"message":"選擇媒體檔案"},
-  "mediaTasks": {"message":"下載工作"},
-  "mediaRetention": {"message":"暫存 $size$，$time$ 自動清除","placeholders":{"size":{"content":"$1"},"time":{"content":"$2"}}},
+  "sideEstimatedSize": {
+    "message": "約 $size$",
+    "placeholders": {
+      "size": {
+        "content": "$1"
+      }
+    }
+  },
+  "sideCardFormat": {
+    "message": "格式"
+  },
+  "sideSavedFormat": {
+    "message": "儲存格式"
+  },
+  "sideExpectedFormat": {
+    "message": "預計格式"
+  },
+  "sideCardSize": {
+    "message": "大小"
+  },
+  "sidePictureSize": {
+    "message": "畫面大小"
+  },
+  "sideCodec": {
+    "message": "編碼"
+  },
+  "sideExpectedCodec": {
+    "message": "預計編碼"
+  },
+  "sideAutomatic": {
+    "message": "自動"
+  },
+  "sideVersion": {
+    "message": "版本"
+  },
+  "sideDocument": {
+    "message": "文件"
+  },
+  "sideGenericFile": {
+    "message": "檔案"
+  },
+  "mediaCodecUnavailable": {
+    "message": "網頁未提供所選編碼，請改選其他版本。"
+  },
+  "mergePreparing": {
+    "message": "正在下載畫面與聲音。兩項都準備好後，Snag 會在本頁自動合併。"
+  },
+  "mergeFileReady": {
+    "message": "已就緒"
+  },
+  "mergeSending": {
+    "message": "正在準備本機合併"
+  },
+  "mergeProcessing": {
+    "message": "正在本機合併影音"
+  },
+  "mergeFinished": {
+    "message": "已合併，可在瀏覽器下載記錄中查看"
+  },
+  "mergeUnconfirmed": {
+    "message": "合併工具尚未確認收到兩個檔案。可查看詳細資訊，或重新傳送已下載的檔案。"
+  },
+  "mergeRetrySend": {
+    "message": "重新傳送"
+  },
+  "mergeToolDetails": {
+    "message": "查看合併詳情"
+  },
+  "mergeMissingFiles": {
+    "message": "工作缺少影像或聲音，請回到側欄重新下載"
+  },
+  "mergeDownloadFailed": {
+    "message": "有一項下載失敗。點選該項旁的重新下載即可繼續。"
+  },
+  "mergeSetupFailed": {
+    "message": "暫時無法準備下載。請回到影片側欄重新開始合併。"
+  },
+  "mergeNoProgress": {
+    "message": "30 秒未收到資料"
+  },
+  "sideEpisode": {
+    "message": "第$index$集",
+    "placeholders": {
+      "index": {
+        "content": "$1"
+      }
+    }
+  },
+  "sidePlayingResolution": {
+    "message": "網頁播放 $quality$",
+    "placeholders": {
+      "quality": {
+        "content": "$1"
+      }
+    }
+  },
+  "sideDownloadAt": {
+    "message": "下載 $quality$",
+    "placeholders": {
+      "quality": {
+        "content": "$1"
+      }
+    }
+  },
+  "sideTier": {
+    "message": "畫質"
+  },
+  "sideEncodings": {
+    "message": "編碼版本"
+  },
+  "sideCapturedVersion": {
+    "message": "已擷取的版本"
+  },
+  "sideTierOnPage": {
+    "message": "$name$（切換網頁畫質）",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "sideTierNoFile": {
+    "message": "$name$（暫無檔案）",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "sideTierSwitching": {
+    "message": "正在等待網頁切換畫質…"
+  },
+  "sideTierFailed": {
+    "message": "網頁暫未提供「$name$」的檔案，已保留原本的下載選項。",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "mediaDownloadVideo": {
+    "message": "下載影片"
+  },
+  "mediaChoose": {
+    "message": "下載方式"
+  },
+  "mediaAudioOnly": {
+    "message": "僅下載音訊"
+  },
+  "mediaVideoOnly": {
+    "message": "下載無聲影片"
+  },
+  "mediaFindAudio": {
+    "message": "重新尋找聲音"
+  },
+  "mediaNoAudio": {
+    "message": "未找到音軌"
+  },
+  "mediaNoVideo": {
+    "message": "未找到影像"
+  },
+  "mediaMerging": {
+    "message": "正在合併影音"
+  },
+  "mediaExtracting": {
+    "message": "正在擷取"
+  },
+  "mediaSaving": {
+    "message": "正在儲存"
+  },
+  "mediaSpace": {
+    "message": "暫存空間不足"
+  },
+  "mediaSourceFailed": {
+    "message": "下載中斷"
+  },
+  "mediaPlaylistReadFailed": {
+    "message": "Could not read playlist"
+  },
+  "mediaSegmentReadFailed": {
+    "message": "Could not read media segment"
+  },
+  "mediaFileReadFailed": {
+    "message": "Could not read media file"
+  },
+  "mediaRequestTimeout": {
+    "message": "Timed out waiting for data"
+  },
+  "mediaUnexpectedResponse": {
+    "message": "Server returned a page or other unexpected content"
+  },
+  "mediaResponseIncomplete": {
+    "message": "Incomplete response"
+  },
+  "mediaSegments": {
+    "message": "正在收集片段"
+  },
+  "mediaPartProgress": {
+    "message": "Parts $done$/$total$ · $percent$%",
+    "placeholders": {
+      "done": {
+        "content": "$1"
+      },
+      "total": {
+        "content": "$2"
+      },
+      "percent": {
+        "content": "$3"
+      }
+    }
+  },
+  "mediaSegmentIncomplete": {
+    "message": "影片片段未收齊"
+  },
+  "mediaSegmentUnavailable": {
+    "message": "YouTube 無法播放這個版本"
+  },
+  "mediaSegmentQuality": {
+    "message": "未取得所選畫質"
+  },
+  "mediaSaveFailed": {
+    "message": "儲存失敗"
+  },
+  "mediaBadFile": {
+    "message": "無法處理這個檔案"
+  },
+  "mediaProtected": {
+    "message": "此播放清單使用了加密"
+  },
+  "mediaLive": {
+    "message": "直播請使用詳細資料中的錄製工具"
+  },
+  "mediaUnavailable": {
+    "message": "本機下載暫不可用"
+  },
+  "mediaClear": {
+    "message": "立即清理"
+  },
+  "mediaCancel": {
+    "message": "取消"
+  },
+  "mediaQueued": {
+    "message": "排隊中"
+  },
+  "mediaLocalTool": {
+    "message": "本機影音處理"
+  },
+  "mediaPickFiles": {
+    "message": "選擇媒體檔案"
+  },
+  "mediaTasks": {
+    "message": "下載工作"
+  },
+  "mediaRetention": {
+    "message": "暫存 $size$，$time$ 自動清除",
+    "placeholders": {
+      "size": {
+        "content": "$1"
+      },
+      "time": {
+        "content": "$2"
+      }
+    }
+  },
   "sideMerge": {
     "message": "合併影音"
   },
@@ -232,22 +464,54 @@
   "sideHandedOff": {
     "message": "已交給下載工具處理。"
   },
-  "playbackRateLimit": { "message": "播放器不支援這個倍速，請試試 16× 或更低。" },
-  "playbackRateUnsupported": { "message": "請輸入目前播放器支援的正數倍速。" },
-  "playbackEnterFullscreen": { "message": "進入影片全螢幕" },
-  "playbackExitFullscreen": { "message": "退出全螢幕" },
-  "playbackConfirmFullscreen": { "message": "請點網頁下方的「進入影片全螢幕」。" },
-  "playbackFullscreenBlocked": { "message": "此網頁無法進入全螢幕。" },
-  "sidePreviewLoading": { "message": "正在載入預覽…" },
-  "sidePreviewFollows": { "message": "畫面隨網頁播放" },
-  "sidePreviewWaiting": { "message": "等待網頁播放器載入" },
-  "sidePlayOnPage": { "message": "播放網頁影片" },
-  "sidePreviewUnavailable": { "message": "這個檔案暫時無法預覽。" },
-  "sidePreviewSegment": { "message": "這個片段無法單獨播放。" },
-  "sidePreviewManifest": { "message": "這份播放清單需要搭配原網頁的播放器預覽。" },
-  "sidePreviewSilent": { "message": "檔案預覽 · 靜音" },
-  "sidePlayPreview": { "message": "播放預覽" },
-  "sidePausePreview": { "message": "暫停預覽" },
+  "playbackRateLimit": {
+    "message": "播放器不支援這個倍速，請試試 16× 或更低。"
+  },
+  "playbackRateUnsupported": {
+    "message": "請輸入目前播放器支援的正數倍速。"
+  },
+  "playbackEnterFullscreen": {
+    "message": "進入影片全螢幕"
+  },
+  "playbackExitFullscreen": {
+    "message": "退出全螢幕"
+  },
+  "playbackConfirmFullscreen": {
+    "message": "請點網頁下方的「進入影片全螢幕」。"
+  },
+  "playbackFullscreenBlocked": {
+    "message": "此網頁無法進入全螢幕。"
+  },
+  "sidePreviewLoading": {
+    "message": "正在載入預覽…"
+  },
+  "sidePreviewFollows": {
+    "message": "畫面隨網頁播放"
+  },
+  "sidePreviewWaiting": {
+    "message": "等待網頁播放器載入"
+  },
+  "sidePlayOnPage": {
+    "message": "播放網頁影片"
+  },
+  "sidePreviewUnavailable": {
+    "message": "這個檔案暫時無法預覽。"
+  },
+  "sidePreviewSegment": {
+    "message": "這個片段無法單獨播放。"
+  },
+  "sidePreviewManifest": {
+    "message": "這份播放清單需要搭配原網頁的播放器預覽。"
+  },
+  "sidePreviewSilent": {
+    "message": "檔案預覽 · 靜音"
+  },
+  "sidePlayPreview": {
+    "message": "播放預覽"
+  },
+  "sidePausePreview": {
+    "message": "暫停預覽"
+  },
   "sideNoPreview": {
     "message": "暫無預覽"
   },
@@ -263,48 +527,132 @@
   "sideFindHint": {
     "message": "「重新掃描」會保留播放進度。「重新載入網頁」會讓網頁重新載入。"
   },
-  "playbackTitle": { "message": "播放控制" },
-  "playbackBack": { "message": "返回資源清單" },
-  "playbackFind": { "message": "重新尋找" },
-  "playbackSource": { "message": "要控制的網頁" },
-  "playbackChoose": { "message": "選擇播放器" },
-  "playbackSpeed": { "message": "播放速度" },
-  "playbackCustom": { "message": "自訂…" },
-  "playbackApply": { "message": "套用" },
-  "playbackPosition": { "message": "播放進度" },
-  "playbackEmpty": { "message": "這個網頁還沒有可控制的播放器" },
-  "playbackEmptyHelp": { "message": "先在網頁上播放一段影片或音訊，播放按鈕就會出現在這裡。" },
-  "playbackChoosePage": { "message": "選擇一個網頁" },
-  "playbackPageHelp": { "message": "從上方選擇有影片或音訊的網頁，或切換到它的分頁。" },
-  "playbackLive": { "message": "直播" },
-  "playbackTools": { "message": "下載與解析工具" },
-  "playbackGone": { "message": "播放器已離開目前網頁，正在重新尋找。" },
-  "playbackActionFailed": { "message": "網頁無法執行這一步，請在原網頁的播放器中操作。" },
-  "playbackShotFailed": { "message": "這個播放器暫時無法儲存截圖。" },
-  "settingsGeneral": { "message": "常用設定" },
-  "settingsCapture": { "message": "擷取規則" },
-  "settingsExtensions": { "message": "副檔名" },
-  "settingsMediaTypes": { "message": "媒體類型" },
-  "settingsDownloads": { "message": "下載與命名" },
-  "settingsNames": { "message": "檔名範本" },
-  "settingsAdvanced": { "message": "進階設定" },
-  "settingsBackup": { "message": "備份與維護" },
-  "settingsCategory": { "message": "設定分類" },
-  "settingsBrowsing": { "message": "側欄與資源清單" },
-  "settingsSidebar": { "message": "點選擴充功能圖示開啟側欄" },
-  "settingsBadge": { "message": "在擴充功能圖示上顯示資源數量" },
-  "settingsDedup": { "message": "略過重複出現的資源" },
-  "settingsNewest": { "message": "新找到的資源排在前面" },
-  "settingsSaveFiles": { "message": "儲存檔案" },
-  "settingsAskWhere": { "message": "每次下載前選擇儲存位置" },
-  "settingsUseNames": { "message": "使用自訂檔名" },
-  "settingsEditName": { "message": "編輯檔名範本" },
-  "settingsAutoSave": { "message": "變更會自動儲存。" },
-  "settingsSaved": { "message": "已儲存" },
-  "settingsSaveFailed": { "message": "無法儲存，請再試一次。" },
-  "settingsTransfer": { "message": "備份設定" },
-  "settingsMaintenance": { "message": "維護" },
-  "port": { "message": "連接埠" },
+  "playbackTitle": {
+    "message": "播放控制"
+  },
+  "playbackBack": {
+    "message": "返回資源清單"
+  },
+  "playbackFind": {
+    "message": "重新尋找"
+  },
+  "playbackSource": {
+    "message": "要控制的網頁"
+  },
+  "playbackChoose": {
+    "message": "選擇播放器"
+  },
+  "playbackSpeed": {
+    "message": "播放速度"
+  },
+  "playbackCustom": {
+    "message": "自訂…"
+  },
+  "playbackApply": {
+    "message": "套用"
+  },
+  "playbackPosition": {
+    "message": "播放進度"
+  },
+  "playbackEmpty": {
+    "message": "這個網頁還沒有可控制的播放器"
+  },
+  "playbackEmptyHelp": {
+    "message": "先在網頁上播放一段影片或音訊，播放按鈕就會出現在這裡。"
+  },
+  "playbackChoosePage": {
+    "message": "選擇一個網頁"
+  },
+  "playbackPageHelp": {
+    "message": "從上方選擇有影片或音訊的網頁，或切換到它的分頁。"
+  },
+  "playbackLive": {
+    "message": "直播"
+  },
+  "playbackTools": {
+    "message": "下載與解析工具"
+  },
+  "playbackGone": {
+    "message": "播放器已離開目前網頁，正在重新尋找。"
+  },
+  "playbackActionFailed": {
+    "message": "網頁無法執行這一步，請在原網頁的播放器中操作。"
+  },
+  "playbackShotFailed": {
+    "message": "這個播放器暫時無法儲存截圖。"
+  },
+  "settingsGeneral": {
+    "message": "常用設定"
+  },
+  "settingsCapture": {
+    "message": "擷取規則"
+  },
+  "settingsExtensions": {
+    "message": "副檔名"
+  },
+  "settingsMediaTypes": {
+    "message": "媒體類型"
+  },
+  "settingsDownloads": {
+    "message": "下載與命名"
+  },
+  "settingsNames": {
+    "message": "檔名範本"
+  },
+  "settingsAdvanced": {
+    "message": "進階設定"
+  },
+  "settingsBackup": {
+    "message": "備份與維護"
+  },
+  "settingsCategory": {
+    "message": "設定分類"
+  },
+  "settingsBrowsing": {
+    "message": "側欄與資源清單"
+  },
+  "settingsSidebar": {
+    "message": "點選擴充功能圖示開啟側欄"
+  },
+  "settingsBadge": {
+    "message": "在擴充功能圖示上顯示資源數量"
+  },
+  "settingsDedup": {
+    "message": "略過重複出現的資源"
+  },
+  "settingsNewest": {
+    "message": "新找到的資源排在前面"
+  },
+  "settingsSaveFiles": {
+    "message": "儲存檔案"
+  },
+  "settingsAskWhere": {
+    "message": "每次下載前選擇儲存位置"
+  },
+  "settingsUseNames": {
+    "message": "使用自訂檔名"
+  },
+  "settingsEditName": {
+    "message": "編輯檔名範本"
+  },
+  "settingsAutoSave": {
+    "message": "變更會自動儲存。"
+  },
+  "settingsSaved": {
+    "message": "已儲存"
+  },
+  "settingsSaveFailed": {
+    "message": "無法儲存，請再試一次。"
+  },
+  "settingsTransfer": {
+    "message": "備份設定"
+  },
+  "settingsMaintenance": {
+    "message": "維護"
+  },
+  "port": {
+    "message": "連接埠"
+  },
   "extensionName": {
     "message": "Snag"
   },
@@ -851,7 +1199,9 @@
   "mp4Format": {
     "message": "mp4格式"
   },
-  "writeDirectlyToFile": { "message": "直接寫入指定檔案" },
+  "writeDirectlyToFile": {
+    "message": "直接寫入指定檔案"
+  },
   "downloadWhileSaving": {
     "message": "邊下邊存"
   },

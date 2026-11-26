@@ -7,6 +7,8 @@ function fileQuality(group,track) {
     if (track.kind !== "video") return "";
     const declared = SnagPlayer.quality(track.label || biliTierNames[track.qualityId],0,track.fps);
     const point = group.point;
+    if (track.streamLeaf && !declared && point?.loaded && point.width > 0 && point.height > 0)
+        return SnagPlayer.playbackQuality(point);
     if (/^https?:\/\//i.test(point?.current) && resourceAddress(point.current) === resourceAddress(track.record.url) &&
         !isM3U8(track.record) && !isMPD(track.record)) {
         // Only the exact, direct file can inherit the decoded dimensions.

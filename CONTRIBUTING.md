@@ -35,10 +35,12 @@ python tools/package.py
 | --- | --- |
 | 安装、设置、升级 | `node tests/welcome.js`、`node tests/controls-settings.js`、`node tests/upgrade.js` |
 | 资源列表、网页定位、画质和编码选择 | `node tests/sidebar.js`、`node tests/sidebar-quality.js`、`node tests/selection-ui.js` |
-| B 站换片、番剧、YouTube 分段 | `node tests/bili-autoplay.js`、`node tests/bili-episodes.js`、`node tests/youtube-segments.js` |
-| 动态播放器、签名清单和透明遮罩 | `node tests/generic-streams.js`、`node tests/player-discovery.js` |
-| 多分片下载进度、重试、取消与离屏请求规则 | `node tests/stream-parts.js` |
-| 合并和音轨提取、保存与清理 | `node tests/local-media.js`、`node tests/stream-save.js`、`node tests/media-cleanup.js` |
+| B 站连播、稍后再看、收藏夹、合集和番剧 | `node tests/bili-autoplay.js`、`node tests/bili-lists.js`、`node tests/bili-episodes.js` |
+| YouTube 分段 | `node tests/youtube-segments.js` |
+| 动态播放器、开放 Shadow DOM、无后缀分片、签名刷新、单档 HLS 卡片与透明遮罩 | `node tests/generic-streams.js`、`node tests/player-discovery.js` |
+| MP4 初始化段与 MPEG-TS 的视频编码识别 | `node tests/leaf-codecs.js` |
+| 多任务排队、分片并发与进度、HLS AES-128 解密、TS 重封装、取消与清理 | `node tests/stream-parts.js` |
+| 来源帧的 Referrer 策略、离屏请求规则、音轨提取和本机保存 | `node tests/local-media.js`、`node tests/stream-save.js`、`node tests/media-cleanup.js` |
 
 运行全部浏览器测试可使用以下命令。测试使用本地媒体样本和独立的临时浏览器配置，默认无头运行。可以用 `CHROME` 环境变量指定 Edge 或 Chrome 可执行文件的位置。[测试驱动](tests/lib/harness.js) · [测试样本](tests/fixtures/) · [上游测试框架与部分媒体样本来源](https://github.com/xifangczy/cat-catch/tree/33b21ba98995d01602cd289f082754fa00ccf042/tests)
 

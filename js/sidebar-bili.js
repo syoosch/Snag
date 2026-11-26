@@ -1,20 +1,5 @@
 // A Bilibili video can change inside one browser document. The part number is part of its identity.
 globalThis.SnagBili = (() => {
-    function route(address) {
-        let url;
-        try { url = new URL(address); } catch { return; }
-        if (!/^(?:www\.|m\.)?bilibili\.com$/i.test(url.hostname)) return;
-        const series = /^\/bangumi\/play\/(ep|ss)([1-9]\d*)\/?$/i.exec(url.pathname);
-        if (series) {
-            const episode = series[1].toLowerCase() === "ep";
-            return {bangumi:true,episodeId:episode ? series[2] : "",seasonId:episode ? "" : series[2],
-                key:"bangumi/" + series[1].toLowerCase() + series[2]};
-        }
-        const id = /^\/video\/(BV[0-9A-Za-z]+|av\d+)\/?$/i.exec(url.pathname)?.[1];
-        const part = Number(url.searchParams.get("p") || 1);
-        if (id && Number.isSafeInteger(part) && part > 0) return { id, part, key:id + "/" + part };
-    }
-
     function representation(address) {
         if (typeof address !== "string" || !/\.m4s(?:[?#]|$)/i.test(address)) return;
         let url;
@@ -30,12 +15,14 @@ globalThis.SnagBili = (() => {
     }
 
     function videoInfo(route, data) {
-        if (!route || route.bangumi || !data || (route.id !== data.bvid && route.id.toLowerCase() !== "av" + data.aid)) return;
-        const page = data.pages?.find(item => item.page === route.part) ||
-            (route.part === 1 && !data.pages?.length ? data : null);
+        if (!route?.id || !data || (route.id !== data.bvid && route.id.toLowerCase() !== "av" + data.aid)) return;
+        const byPart = !route.list || route.explicitPart;
+        const pages = data.pages?.length ? data.pages : [data];
+        const page = pages.find(item => (!route.cid || String(item.cid) === route.cid) &&
+            (byPart ? (item.page ?? 1) === route.part : !!route.cid || Number(data.videos || pages.length) === 1));
         if (!page || !/^\d+$/.test(String(page.cid)) || Number(page.cid) <= 0) return;
         const title = data.pages?.length > 1 || data.videos > 1 ? [data.title, page.part].filter(Boolean).join(" · ") : data.title;
-        return { route:route.key, cid:String(page.cid), title:String(title || "").slice(0,200),
+        return { route:route.key, id:route.id, cid:String(page.cid), title:String(title || "").slice(0,200),
             poster:/^https?:\/\//i.test(data.pic || "") ? data.pic : "", duration:Number(page.duration) || 0 };
     }
 
@@ -126,16 +113,41 @@ globalThis.SnagBili = (() => {
     }
     // Runs in the page's world. Return only public player metadata needed for this part.
     function readPlayer(route, knownCid) {
-        const {part} = route;
         const state = window.__INITIAL_STATE__;
         const data = state?.videoData;
-        const page = data?.pages?.find(item => item.page === part);
-        const info = data && { bvid:data.bvid, aid:data.aid, cid:data.cid, title:data.title, pic:data.pic,
-            duration:data.duration, videos:data.pages?.length, pages:page ? [{ page:page.page, part:page.part, cid:page.cid, duration:page.duration }] : [] };
         const player = window.player;
         const read = method => { try { return player?.[method]?.(); } catch { /* Player not ready. */ } };
         const active = read("getVideoInfo"), manifest = read("getManifest");
         const main = document.querySelector("#bilibili-player video,.bpx-player-video-wrap video");
+        const liveCid = manifest?.cid || active?.cid;
+        const bvid = manifest?.bvid || active?.bvid, aid = manifest?.aid || active?.aid;
+        const livePart = Number(active?.p || manifest?.p);
+        const matches = item => route.id && item && (item.bvid === route.id || "av" + item.aid === route.id.toLowerCase());
+        const comparableId = item => /^av/i.test(route.id) ? item?.aid : item?.bvid;
+        let selection, pending = false;
+        if (route.list) {
+            // A queue can reuse the URL, video element and even the title. Only the current player can select a row.
+            const entry = liveCid && data?.pages?.find(item => String(item.cid) === String(liveCid));
+            const initialOwner = liveCid && (entry || String(data?.cid) === String(liveCid)) && data;
+            // A CID-only player can identify its video through the site's own list for that exact part.
+            const owner = bvid || aid ? {bvid,aid} : initialOwner || (liveCid && window.__snagBiliList?.(liveCid));
+            const id = /^BV[0-9A-Za-z]+$/i.test(owner?.bvid || "") ? owner.bvid :
+                /^[1-9]\d*$/.test(owner?.aid || "") ? "av" + owner.aid : "";
+            const reportedPart = livePart || entry?.page;
+            const disagrees = field => manifest?.[field] && active?.[field] && String(manifest[field]) !== String(active[field]);
+            pending = !main || !!(disagrees("cid") || disagrees("bvid") || disagrees("aid") ||
+                (route.id && comparableId(owner) && !matches(owner)) || (route.cid && liveCid && route.cid !== String(liveCid)) ||
+                (route.explicitPart && reportedPart && route.part !== reportedPart));
+            if (!pending && (id || route.id) && /^[1-9]\d*$/.test(liveCid || "")) {
+                // With a URL ID and only a player CID, videoInfo still requires public metadata to match both.
+                selection = {id:route.id || id,cid:String(liveCid),part:reportedPart || route.part};
+                route = {...route,...selection};
+            }
+        }
+        const {part} = route;
+        const page = data?.pages?.find(item => route.cid ? String(item.cid) === route.cid : item.page === part);
+        const info = data && { bvid:data.bvid, aid:data.aid, cid:data.pages?.length ? page?.cid : data.cid, title:data.title, pic:data.pic,
+            duration:data.duration, videos:data.pages?.length || data.videos, pages:page ? [{ page:page.page, part:page.part, cid:page.cid, duration:page.duration }] : [] };
         let playing;
         function track(item) {
             if (!item) return;
@@ -186,17 +198,16 @@ globalThis.SnagBili = (() => {
             }
             menuCid = live.cid || first.cid || legacy?.cid;
         } else {
-            const matches = item => item && (item.bvid === route.id || "av" + item.aid === route.id.toLowerCase());
             const initialCid = matches(data) && (page?.cid || (part === 1 && !data.pages?.length && data.cid));
-            const liveCid = manifest?.cid || active?.cid;
-            const bvid = manifest?.bvid || active?.bvid, aid = manifest?.aid || active?.aid;
-            const livePart = Number(active?.p || manifest?.p);
-            const expectedCid = knownCid || initialCid;
-            const samePart = liveCid && (!expectedCid || String(liveCid) === String(expectedCid)) &&
-                (bvid || aid ? matches({bvid,aid}) && (livePart ? livePart === part : part === 1 || !!expectedCid) : !!expectedCid);
+            const expectedCid = route.cid || knownCid || initialCid;
+            const liveOwner = {bvid,aid};
+            const sameOwner = matches(liveOwner) || (route.list && !comparableId(liveOwner) &&
+                [knownCid,initialCid].some(cid => cid && String(cid) === String(liveCid)));
+            const samePart = !pending && liveCid && (!expectedCid || String(liveCid) === String(expectedCid)) &&
+                (bvid || aid ? sameOwner && (livePart ? livePart === part : part === 1 || !!expectedCid) : !!expectedCid);
             if (samePart) {
-                const title = active?.title || document.querySelector("h1.video-title,h1")?.textContent.trim();
-                playing = {bvid,aid,title,pages:[{page:part,cid:liveCid}]};
+                const title = active?.title || (!route.list && document.querySelector("h1.video-title,h1")?.textContent.trim());
+                playing = {bvid,aid,title:title || "",pages:[{page:part,cid:liveCid}]};
             }
             const cid = String(expectedCid || (samePart && liveCid) || "");
             const observed = cid && window.__snagBiliList?.(cid);
@@ -225,8 +236,8 @@ globalThis.SnagBili = (() => {
         const ids = Array.isArray(supported) && supported.length ? supported.map(Number) : [...names.keys()];
         const formats = [...new Set(ids)].filter(id => Number.isSafeInteger(id) && id > 0).slice(0,64)
             .map(id => ({id,name:String(names.get(id) || "").slice(0,64)}));
-        return { page:location.href, observesLists:typeof window.__snagBiliList === "function",
-            info, playing, episode, menuCid, playback, formats, dash:dash && {
+        return { page:location.href, knowsRoute:typeof snagBiliRoute === "function", observesLists:typeof window.__snagBiliList === "function",
+            selection, pending, info, playing, episode, menuCid, playback, formats, dash:dash && {
             duration:dash.duration,
             video:dash.video?.slice(0,128).map(track), audio:dash.audio?.slice(0,32).map(track),
             flac:{audio:track(dash.flac?.audio)}, dolby:{audio:dash.dolby?.audio?.slice(0,16).map(track)} } };
@@ -235,19 +246,18 @@ globalThis.SnagBili = (() => {
     async function requestQuality(cid, episodeId, qualityId, routeKey) {
         const player = window.player;
         const samePart = () => {
-            if (!/^(?:www\.|m\.)?bilibili\.com$/i.test(location.hostname)) return false;
+            const route = typeof snagBiliRoute === "function" && snagBiliRoute(location.href);
+            if (!route || route.key !== routeKey) return false;
             const state = player?.getManifest?.();
             const main = document.querySelector("#bilibili-player video,.bpx-player-video-wrap video");
             if (main?.mediaKeys) return false;
             if (!episodeId) {
-                const path = /^\/video\/(BV[0-9A-Za-z]+|av\d+)\/?$/i.exec(location.pathname);
-                const part = Number(new URL(location.href).searchParams.get("p") || 1);
                 const active = player?.getVideoInfo?.();
-                return !!path && path[1] + "/" + part === routeKey && String(state?.cid || active?.cid) === cid &&
+                return !route.bangumi && (!route.list || main) && String(state?.cid || active?.cid) === cid &&
+                    (!active?.cid || String(active.cid) === cid) &&
                     !active?.video_info?.is_drm && !active?.video_info?.is_preview;
             }
-            const path = /^\/bangumi\/play\/(ep\d+|ss\d+)\/?$/i.exec(location.pathname);
-            if (!path || "bangumi/" + path[1].toLowerCase() !== routeKey ||
+            if (!route.bangumi ||
                 String(state?.cid) !== cid || state.episodeId && String(state.episodeId) !== episodeId) return false;
             const result = window.__PLAYURL_HYDRATE_DATA__?.result;
             const info = String(result?.arc?.cid) === cid ? result?.video_info : null;
@@ -280,5 +290,5 @@ globalThis.SnagBili = (() => {
         } catch { /* The website decides whether this quality is playable for this viewer. */ }
         finally { clearTimeout(timer); }
     }
-    return { route, representation, videoInfo, episodeInfo, tracks, playingTracks, mergeTrack, mergeTracks, readPlayer, requestQuality };
+    return { route:snagBiliRoute, representation, videoInfo, episodeInfo, tracks, playingTracks, mergeTrack, mergeTracks, readPlayer, requestQuality };
 })();

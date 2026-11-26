@@ -126,6 +126,7 @@ function detailPreview(pane, group, track) {
     const segmented = isMPD(record) || /^(m4s|ts|m2ts)$/i.test(record.ext);
     const host = el("div",null,"detail-preview");
     pane.append(host);
+    if (track.streamLeaf && point.loaded && frame?.serial === point.serial) return framePreview(host,point,frame);
     const openNative = () => nativePreview(host,point,track,matched && frame,segmented);
     const fileFrame = matched ? frame : frames.get(record.frameId >= 0 ? record.frameId : 0);
     const canPreviewFile = fileFrame && (matched || !record.documentId || !fileFrame.documentId || fileFrame.documentId === record.documentId);

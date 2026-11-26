@@ -195,8 +195,9 @@ test('新版侧栏：识别、预览、点选、定位与下载', async t => {
     const beforeHls = browser.files();
     await panel.eval(`${row('playlist')}.querySelector('.download').click()`);
     const hlsFile = await browser.download(beforeHls,15000);
-    assert.ok(hlsFile && hlsFile.equals(fixture('segment.ts')),'HLS local merge did not save its media bytes');
-    t.check('从无后缀 HLS 清单下载并在本机合并出真实视频分片',true);
+    require('./lib/mp4').checkFastStart(hlsFile,{width:160,height:90,frames:20,fps:10,seconds:2});
+    assert.ok(browser.files().some(name=>!beforeHls.includes(name) && name.endsWith('.mp4')));
+    t.check('从无后缀 HLS 清单保存含画面与声音的可寻址 MP4',true);
     await selectFromPage('#pending');
     await wait("!document.querySelector('#selection-tools').hidden && !document.querySelector('#empty').hidden",'unloaded element');
     await page.eval("document.querySelector('#pending').src='/b.mp4?pending=1'");

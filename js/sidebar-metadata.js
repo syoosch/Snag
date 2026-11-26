@@ -19,6 +19,8 @@ function trackAmount(track,duration) {
 function trackSizeLabel(track,duration) {
     if (track.segments) return segmentSize(track,duration).text;
     if (isM3U8(track.record) || isMPD(track.record)) {
+        if (track.partSize && (!track.partSize.estimated || !track.bitrate))
+            return track.partSize.estimated ? i18n("sideEstimatedSize",bytes(track.partSize.value)) : bytes(track.partSize.value);
         const size = Math.round(track.bitrate * (track.duration || duration) / 8);
         return Number.isSafeInteger(size) && size > 0 ? i18n("sideEstimatedSize",bytes(size)) : "";
     }
@@ -72,7 +74,7 @@ function cardMetadata(group,track,duration,split) {
     const ext = SnagFormat.extension(record);
     let format = isM3U8(record) ? "HLS" : isMPD(record) ? "DASH" : ext.toUpperCase();
     let size, sizeLabel = i18n.sideCardSize, formatLabel = i18n.sideCardFormat;
-    let codec = track.codec || SnagFormat.codec(record.type,group.kind), codecLabel = i18n.sideCodec;
+    let codec = track.codec || SnagFormat.codec(record.codecs || record.type,group.kind), codecLabel = i18n.sideCodec;
     if (track.segments) {
         const amount = segmentSize(track,duration);
         size = amount.text;

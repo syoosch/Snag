@@ -7,28 +7,77 @@ const MediaSources = (() => {
         url.hash = '';
         return url.href;
     }
+    function originReferrer(from,to,policy) {
+        if (!/^https?:\/\//i.test(from) || !/^https?:\/\//i.test(to) || ['no-referrer','never'].includes(policy)) return;
+        try {
+            const source = new URL(from), target = new URL(to);
+            if (source.protocol === 'https:' && target.protocol === 'http:' || policy === 'same-origin' && source.origin !== target.origin) return;
+            return source.origin + '/';
+        } catch { return; }
+    }
     // An identity for comparing manifest revisions. Requests always use the verbatim URI from an observation or manifest.
     function revisionKey(value) {
         const url = new URL(value);
         for (const name of [...url.searchParams.keys()]) {
-            if (/^(?:auth_key|token|sig|signature|expires|exp|hdnts|policy|key-pair-id|x-amz-(?:signature|date|expires|credential|security-token))$/i.test(name)) url.searchParams.delete(name);
+            if (/^(?:auth_key|token|sig|sign|signature|hash|md5|expires?|exp|ttl|validfrom|validto|hdnts|hdnea|st|wssecret|wstime|policy|key-pair-id|x-amz-(?:signature|date|expires|credential|security-token))$/i.test(name)) url.searchParams.delete(name);
         }
         return url.href;
+    }
+    // Used only to compare parsed references. Keep content selectors even on endpoints that serve every film at one path.
+    function contentPath(value) {
+        const url = new URL(value);
+        const selectors = new URLSearchParams();
+        for (const [name,v] of url.searchParams) {
+            if (/^(?:id|v|video|videoid|cid|p|lang|language|quality|format|codec|track|audio|rendition|part|segment|seq|range|start|end|bitrate|resolution)$/i.test(name)) selectors.append(name,v);
+        }
+        selectors.sort();
+        return url.origin + url.pathname + (selectors.size ? '?' + selectors : '');
+    }
+    function referenceLayout(children,audio,parts) {
+        if (!children.length && !audio.length && !parts.length) return;
+        return JSON.stringify([children.map(contentPath),audio.map(contentPath),parts.map(p =>
+            p.range ? [contentPath(p.url),p.range.offset,p.range.length] : contentPath(p.url))]);
+    }
+    function hlsReferences(list,base) {
+        const children = list.variants.map(v => v.url);
+        const audio = list.audio.filter(a => a.URI && a.TYPE === 'AUDIO').map(a => address(a.URI,base));
+        return {children,audio,layout:referenceLayout(children,audio,list.parts)};
     }
     function attributes(line) {
         const result = {};
         for (const [,key,value] of line.matchAll(/([\w-]+)=("[^"]*"|[^,]*)/g)) result[key] = value.replace(/^"|"$/g,'');
         return result;
     }
+    function inlineKey(url) {
+        const match = /^data:[^,]*;base64,([a-z0-9+/]{22}(?:==)?)$/i.exec(url);
+        if (!match) throw new Error('mediaBadFile');
+        return Uint8Array.from(atob(match[1]),c => c.charCodeAt(0));
+    }
+    function hlsKey(line,base) {
+        const {METHOD,URI,KEYFORMAT,IV} = attributes(line);
+        if (METHOD === 'NONE') return null;
+        if (METHOD !== 'AES-128' || !URI?.trim() || (KEYFORMAT !== undefined && KEYFORMAT !== 'identity')) throw new Error('mediaProtected');
+        if (IV !== undefined && !/^0x[0-9a-f]{1,32}$/i.test(IV)) throw new Error('mediaBadFile');
+        let url;
+        if (/^data:/i.test(URI)) {
+            inlineKey(URI);
+            url = URI;
+        } else {
+            try { url = address(URI,base); } catch { throw new Error('mediaBadFile'); }
+        }
+        return {url,iv:IV?.slice(2).padStart(32,'0')};
+    }
     function hls(text, base) {
         const variants = [], audio = [], parts = [];
-        let variant, range, end = 0, previous, init, discontinuity = false, duration = 0;
+        let variant, range, end = 0, previous, init, partDuration;
+        let key = null, sequence = 0, declaredSequence = false, hasMedia = false;
         function part(uri, bytes) {
             const url = address(uri,base);
-            if (!bytes) return {url};
+            if (bytes == null) return {url};
+            if (!/^\d+(?:@\d+)?$/.test(bytes)) throw new Error('mediaBadFile');
             const [length,start] = bytes.split('@').map(Number);
             const offset = start ?? (url === previous ? end : 0);
-            if (!Number.isSafeInteger(length) || length < 1 || !Number.isSafeInteger(offset) || offset < 0) throw new Error('mediaBadFile');
+            if (!Number.isSafeInteger(offset + length) || length < 1) throw new Error('mediaBadFile');
             previous = url; end = offset + length;
             return {url,range:{offset,length}};
         }
@@ -38,21 +87,49 @@ const MediaSources = (() => {
             if (!line) continue;
             if (line.startsWith('#EXT-X-STREAM-INF:')) variant = attributes(line);
             else if (line.startsWith('#EXT-X-MEDIA:')) audio.push(attributes(line));
-            else if (line.startsWith('#EXTINF:')) duration += parseFloat(line.slice(8));
+            else if (line.startsWith('#EXTINF:')) partDuration = Number(line.slice(8).split(',',1)[0]);
             else if (line.startsWith('#EXT-X-BYTERANGE:')) range = line.slice(17);
-            else if (line.startsWith('#EXT-X-KEY:') && attributes(line).METHOD !== 'NONE') throw new Error('mediaProtected');
+            else if (line.startsWith('#EXT-X-MEDIA-SEQUENCE:')) {
+                const value = line.slice('#EXT-X-MEDIA-SEQUENCE:'.length);
+                sequence = Number(value);
+                if (declaredSequence || hasMedia || !/^\d+$/.test(value) || !Number.isSafeInteger(sequence)) throw new Error('mediaBadFile');
+                declaredSequence = true;
+            } else if (line.startsWith('#EXT-X-KEY:')) key = hlsKey(line,base);
+            else if (line.startsWith('#EXT-X-SESSION-KEY:')) hlsKey(line,base);
             else if (line.startsWith('#EXT-X-MAP:')) {
                 const map = attributes(line);
-                const key = map.URI + '|' + map.BYTERANGE;
-                if (init !== key) { parts.push(part(map.URI,map.BYTERANGE)); init = key; }
-            } else if (line === '#EXT-X-DISCONTINUITY') discontinuity = true;
-            else if (line[0] !== '#') {
+                if (key && !key.iv) throw new Error('mediaBadFile');
+                const identity = JSON.stringify([map.URI,map.BYTERANGE,key]);
+                if (init !== identity) {
+                    const header = part(map.URI,map.BYTERANGE);
+                    header.init = true;
+                    if (key) header.key = key;
+                    parts.push(header);
+                    init = identity;
+                }
+            } else if (line[0] !== '#') {
                 if (variant) { variants.push({...variant,url:address(line,base)}); variant = null; }
-                else { parts.push(part(line,range)); range = null; }
+                else {
+                    if (!Number.isSafeInteger(sequence)) throw new Error('mediaBadFile');
+                    const media = part(line,range);
+                    media.duration = Number.isFinite(partDuration) && partDuration > 0 ? partDuration : 0;
+                    partDuration = undefined;
+                    if (key) media.key = key.iv ? key : {...key,iv:sequence.toString(16).padStart(32,'0')};
+                    parts.push(media);
+                    range = null;
+                    hasMedia = true;
+                    sequence++;
+                }
             }
         }
         if (!variants.length && !text.includes('#EXT-X-ENDLIST')) throw new Error('mediaLive');
-        return {variants,audio,parts,ext:init ? 'mp4' : 'ts',discontinuity,duration};
+        const duration = parts.every(p => p.init || p.duration > 0) ? parts.reduce((sum,p) => sum + (p.duration || 0),0) : 0;
+        return {variants,audio,parts,ext:init ? 'mp4' : 'ts',duration};
+    }
+    function rangeSize(parts) {
+        if (!parts.length || !parts.every(p => Number.isSafeInteger(p.range?.length) && p.range.length > 0)) return;
+        const bytes = parts.reduce((sum,p) => sum + p.range.length,0);
+        if (Number.isSafeInteger(bytes)) return bytes;
     }
     async function hlsTracks(file, mode, read, wasRequested, level = 0) {
         if (level > 4) throw new Error('mediaBadFile');
@@ -60,9 +137,9 @@ const MediaSources = (() => {
         const list = hls(text,url);
         if (!list.variants.length) {
             if (!list.parts.length) throw new Error('mediaBadFile');
-            return [{...file,parts:list.parts,ext:list.ext,remux:list.discontinuity}];
+            return [{...file,parts:list.parts,ext:list.ext,remux:true}];
         }
-        const variants = list.variants.sort((a,b) => Number(b.BANDWIDTH) - Number(a.BANDWIDTH));
+        const variants = [...list.variants].sort((a,b) => Number(b.BANDWIDTH) - Number(a.BANDWIDTH));
         const wanted = file.quality || (file.playbackHeight && {height:file.playbackHeight});
         const matching = wanted ? variants.filter(v => {
             const [w,h] = (v.RESOLUTION || '').split('x').map(Number);
@@ -79,6 +156,11 @@ const MediaSources = (() => {
                 const key = revisionKey(file.quality.url);
                 const updated = candidates.filter(v => revisionKey(v.url) === key);
                 if (updated.length === 1) variant = updated[0];
+                if (!updated.length && file.quality.masterLayout && file.quality.masterLayout === hlsReferences(list,url).layout) {
+                    const path = contentPath(file.quality.url);
+                    const samePath = candidates.filter(v => contentPath(v.url) === path);
+                    if (samePath.length === 1) variant = samePath[0];
+                }
             }
         }
         if (!variant) throw new Error('mediaSegmentQuality');
@@ -128,13 +210,15 @@ const MediaSources = (() => {
     function playlistReferences(text,url,format) {
         if (format === 'hls') {
             const list = hls(text,url);
-            return {children:list.variants.map(v => v.url),variants:hlsVariants(list),
-                audio:list.audio.filter(a => a.URI && a.TYPE === 'AUDIO').map(a => address(a.URI,url)),
-                parts:new Set(list.parts.map(p => p.url)), duration:list.duration};
+            const refs = hlsReferences(list,url);
+            const streamLeaf = !refs.children.length && !list.variants.length && list.parts.some(p => !p.init);
+            return {...refs,variants:hlsVariants(list),parts:new Set(list.parts.map(p => p.url)),duration:list.duration,
+                pictureOnly:streamLeaf && refs.audio.length > 0 && list.audio.every(a => a.TYPE !== 'AUDIO' || a.URI),
+                streamLeaf,mediaParts:streamLeaf ? list.parts : undefined,rangeBytes:streamLeaf ? rangeSize(list.parts) : undefined};
         }
         const xml = dashDocument(text), root = xml.documentElement;
         const duration = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:([\d.]+)S)?)?$/.exec(root.getAttribute('mediaPresentationDuration') || '');
-        const parts = new Set(), templates = [], baseUrls = new WeakMap();
+        const parts = new Set(), templates = [], references = [], baseUrls = new WeakMap();
         function elementBase(parent) {
             if (!parent) return url;
             if (!baseUrls.has(parent)) {
@@ -144,10 +228,19 @@ const MediaSources = (() => {
             }
             return baseUrls.get(parent);
         }
-        for (const node of root.querySelectorAll('SegmentURL[media],SegmentTemplate[media]')) {
+        let hasTemplate = false;
+        for (const node of root.querySelectorAll('Initialization,SegmentURL[media],SegmentTemplate[media]')) {
+            if (node.localName === 'Initialization') {
+                const base = elementBase(node.parentElement);
+                references.push(['init',contentPath(address(node.getAttribute('sourceURL') || base,base)),node.getAttribute('range')]);
+                continue;
+            }
             const media = address(node.getAttribute('media'),elementBase(node.parentElement));
-            if (node.localName === 'SegmentURL') parts.add(media);
-            else {
+            if (node.localName === 'SegmentURL') {
+                parts.add(media);
+                references.push(['media',contentPath(media),node.getAttribute('mediaRange')]);
+            } else {
+                hasTemplate = true;
                 const tokens = media.split(/(\$(?:Number|Time|Bandwidth|RepresentationID)(?:%0\d+d)?\$)/);
                 if (tokens.length > 9 || templates.length >= 64) continue;
                 const pattern = tokens.map((s,i) => i % 2 ? (s === '$RepresentationID$' ? '[^/?#]{1,160}' : '[0-9]{1,24}') :
@@ -155,18 +248,21 @@ const MediaSources = (() => {
                 templates.push(new RegExp('^'+pattern.join('')+'$'));
             }
         }
-        return {children:[],audio:[],parts,templates,variants:dashVariants(xml),
+        // A template can establish a hit, but doesn't enumerate the media sequence needed to prove two revisions equivalent.
+        return {children:[],audio:[],parts,templates,layout:parts.size && !hasTemplate ? JSON.stringify(references) : undefined,variants:dashVariants(xml),
             duration:duration && Number(duration[1] || 0)*86400 + Number(duration[2] || 0)*3600 +
                 Number(duration[3] || 0)*60 + Number(duration[4] || 0)};
     }
     // Only metadata from the master playlist is needed to list the encodings.
     function hlsVariants(list) {
-        const audioGroups = new Set(list.audio.filter(t => t.TYPE === 'AUDIO').map(t => t['GROUP-ID']));
+        const audioTracks = list.audio.filter(t => t.TYPE === 'AUDIO');
         return list.variants.map(v => {
             const [w,h] = (v.RESOLUTION || '').split('x').map(Number);
+            const audio = audioTracks.filter(t => t['GROUP-ID'] === v.AUDIO);
             return {url:v.url,height:Math.min(w,h) || 0,fps:Number(v['FRAME-RATE']) || 0,codec:SnagFormat.codec(v.CODECS,'video'),
                 bandwidth:Number(v.BANDWIDTH) || 0,bitrate:Number(v['AVERAGE-BANDWIDTH'] || v.BANDWIDTH) || 0,
-                includesAudio:audioGroups.has(v.AUDIO) || !!SnagFormat.codec(v.CODECS,'audio')};
+                externalAudio:audio.length > 0 && audio.every(t => t.URI),
+                includesAudio:audio.length > 0 || !!SnagFormat.codec(v.CODECS,'audio')};
         });
     }
     function dashVariants(xml) {
@@ -232,15 +328,17 @@ const MediaSources = (() => {
         const tracks = files.map(f => ({...f,parts:f.parts || (f.local || f.recording ? [] : [{url:address(f.url)}])}));
         for (const track of tracks) if (track.playlist) {
             // The manifest response describes a text document. Only explicit byte ranges give a media byte count.
-            track.size = track.parts.every(part => Number.isSafeInteger(part.range?.length) && part.range.length > 0)
-                ? track.parts.reduce((sum,part) => sum + part.range.length,0) : undefined;
+            track.size = rangeSize(track.parts);
         }
         if (observed.size) for (const track of tracks) {
-            for (const part of track.parts) part.url = resolve(part.url);
+            for (const part of track.parts) {
+                part.url = resolve(part.url);
+                if (part.key && /^https?:/i.test(part.key.url)) part.key = {...part.key,url:resolve(part.key.url)};
+            }
         }
         // Ordinary complete files retain their original container, tracks and metadata.
         const copy = request.mode === 'full' && tracks.length === 1 && !tracks[0].remux;
         return {tracks,copy};
     }
-    return {address,plan,videoVariants,playlistReferences,observedRequests,revisionKey};
+    return {address,plan,videoVariants,playlistReferences,observedRequests,revisionKey,contentPath,inlineKey,originReferrer};
 })();

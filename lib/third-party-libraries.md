@@ -9,7 +9,7 @@
 | 你的操作 | 什么时候会连接或共享 | 对方能接触到什么 |
 | --- | --- | --- |
 | 打开侧栏、预览、普通下载 | 扩展在浏览器中识别并保存抓取记录。显示缩略图、试听或下载时会访问网页提供的文件地址，包括网站使用的媒体服务器。 | 文件来源能看到相应请求。部分下载需要附上来源页或原请求所需的标头。 |
-| 在 B 站看画质和分集 | 普通视频页在内存中保留播放器已收到的最近 4 个分 P 的音画清单，离开文档后释放。侧栏据此跟随连播。信息不足时查询公开画质或剧集目录。点「切换网页画质」时，由正在看的网页按当前账号的播放权限切换。 | 读取网页已收到的清单不会再次请求。Snag 向 `api.bilibili.com` 查询公开信息时省略账号 Cookie。播放器切换使用网站自己的会话。预览和下载另外访问媒体来源。 |
+| 在 B 站看画质和分集 | 普通视频页和列表播放页在内存中保留播放器已收到的最近 4 个分 P 的音画清单，离开文档后释放。侧栏用当前播放的分 P 编号匹配清单。信息不足时查询该视频的公开资料、画质或剧集目录。点「切换网页画质」时，由正在看的网页按当前账号的播放权限切换。 | Snag 向 `api.bilibili.com` 查询公开信息时省略账号 Cookie。播放器切换使用网站自己的会话。预览和下载另外访问媒体来源。 |
 | 在 YouTube 看视频 | 打开侧栏会读取当前播放器列出的版本。有主播放清单时，侧栏向 `googlevideo.com` 读取清单，取得各画质的编码和码率，省略 Cookie。点下载后才从文件或清单取媒体。需要播放器继续加载分段时，临时用静音后台标签页打开同一视频，任务结束后关闭。 | YouTube 及其媒体服务器会收到这些请求。后台播放沿用浏览器的登录状态，也可能计入观看记录。分段和音画合并均在本机处理。 |
 | 下载完整视频、仅音频、无声视频 | 侧栏按所选模式下载需要的轨道。需要合并或提取时，在扩展自己的后台文档中启动本地引擎。 | 媒体来源收到请求，独立第三方合并站、镜像和代码分发站均不参与。成品通过浏览器下载管理器保存。 |
 | 「边下边存」、HLS 直播录制 | 从媒体来源分段读取，连续写入扩展的本机临时目录，完成时交给浏览器保存。实验性的「直接写入文件」使用浏览器文件选择器。 | 媒体只在本机暂存。完成或取消时释放，关闭任务或重启浏览器后也会检查遗留文件。 |
@@ -27,6 +27,8 @@
 ## 内置 FFmpeg 与临时文件
 
 Snag 随包分发 `@ffmpeg/core` 单线程版 0.12.6。程序和计算内核均从扩展目录加载。浏览器后台文档用于在侧栏关闭时继续工作。扩展页面的脚本策略允许本地 WebAssembly。日常下载无需单独安装 FFmpeg。
+
+保存采用标准 AES-128 的 HLS 点播时，浏览器按清单的密钥 URI 读取 16 字节密钥，并使用原生 Web Crypto 解密。密钥按轨道暂存在内存中。页面发现的媒体缺少来源标头时，侧栏按所在文档的策略使用来源域，跨域、降级及不同来源帧分别核对。[分片读取与解密](../js/media-jobs.js) · [来源标头处理](../js/media-panel.js)
 
 - 官方 npm 发布包的 SHA-512（Base64）为 `PrjWBTfGn2WVn9T7wGnzfFwChbqWeZc7tM9vvJZVRadYFUDakfzy7W0LpYC0cvvK0xT82qlBsk38lQhJ/Hps5A==`。校验后原样提取 `package/dist/umd/ffmpeg-core.js` 和 `package/dist/umd/ffmpeg-core.wasm`。两份文件和许可证的散列在[依赖记录](../tools/dependency-baseline.json)。[官方包记录](https://registry.npmjs.org/@ffmpeg%2fcore/0.12.6) · [对应源码和构建脚本](https://github.com/ffmpegwasm/ffmpeg.wasm/tree/e0d4c62a229ba58ea0c6e6b881e289f2fefe97c4)
 - JavaScript 封装沿用上游 MIT 许可。编译后的引擎包含 FFmpeg 5.1.4 及第三方编解码库，各组件按其许可分发。仓库随附 [MIT](ffmpeg/LICENSE-MIT.txt)、[GPL](ffmpeg/LICENSE-GPLv2.txt) 和 [LGPL](ffmpeg/LICENSE-LGPLv2.1.txt) 原文。[上游许可说明](https://ffmpegwasm.netlify.app/docs/faq/) · [构建使用的组件与版本](https://github.com/ffmpegwasm/ffmpeg.wasm/blob/e0d4c62a229ba58ea0c6e6b881e289f2fefe97c4/Dockerfile)

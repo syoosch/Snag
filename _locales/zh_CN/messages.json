@@ -80,17 +80,39 @@
   "sidePick": {
     "message": "去网页上选"
   },
-  "sideRescan": { "message": "重新扫描" },
-  "sideScanning": { "message": "扫描中…" },
-  "sideScanned": { "message": "已扫描" },
-  "sideScanNoMedia": { "message": "还没识别到当前视频的这类文件。播放几秒后再扫，或点「刷新网页」。" },
-  "sideScanFailed": { "message": "暂时读不到网页。等网页加载后再点「重新扫描」，也可以直接点「刷新网页」。" },
-  "sideReloadCapture": { "message": "刷新网页" },
-  "sideListen": { "message": "试听" },
-  "sidePauseListening": { "message": "暂停试听" },
-  "sideAudioTrack": { "message": "音轨试听" },
-  "sideAudioGesture": { "message": "先在原网页点一下，再回来点「试听」。" },
-  "sideAudioUnavailable": { "message": "这条音轨暂时无法试听，仍可下载文件。" },
+  "sideRescan": {
+    "message": "重新扫描"
+  },
+  "sideScanning": {
+    "message": "扫描中…"
+  },
+  "sideScanned": {
+    "message": "已扫描"
+  },
+  "sideScanNoMedia": {
+    "message": "还没识别到当前视频的这类文件。播放几秒后再扫，或点「刷新网页」。"
+  },
+  "sideScanFailed": {
+    "message": "暂时读不到网页。等网页加载后再点「重新扫描」，也可以直接点「刷新网页」。"
+  },
+  "sideReloadCapture": {
+    "message": "刷新网页"
+  },
+  "sideListen": {
+    "message": "试听"
+  },
+  "sidePauseListening": {
+    "message": "暂停试听"
+  },
+  "sideAudioTrack": {
+    "message": "音轨试听"
+  },
+  "sideAudioGesture": {
+    "message": "先在原网页点一下，再回来点「试听」。"
+  },
+  "sideAudioUnavailable": {
+    "message": "这条音轨暂时无法试听，仍可下载文件。"
+  },
   "sideCancelPick": {
     "message": "取消点选"
   },
@@ -124,10 +146,18 @@
   "sideUnavailable": {
     "message": "打开一个普通网页，即可在这里选择资源。"
   },
-  "sideAdvertisement": {"message":"广告"},
-  "sidePlayingNow": {"message":"正在播放"},
-  "sidePlayerNoFile": {"message":"暂未找到下载文件"},
-  "sideProtectedPlayer": {"message":"此视频受保护"},
+  "sideAdvertisement": {
+    "message": "广告"
+  },
+  "sidePlayingNow": {
+    "message": "正在播放"
+  },
+  "sidePlayerNoFile": {
+    "message": "暂未找到下载文件"
+  },
+  "sideProtectedPlayer": {
+    "message": "此视频受保护"
+  },
   "sideWaiting": {
     "message": "已选中。请播放这段媒体或等图片加载，找到对应文件后会自动出现。"
   },
@@ -146,75 +176,270 @@
   "sideSaveSegment": {
     "message": "下载片段"
   },
-  "sideEstimatedSize": {"message":"约 $size$","placeholders":{"size":{"content":"$1"}}},
-  "sideCardFormat": {"message":"格式"},
-  "sideSavedFormat": {"message":"保存格式"},
-  "sideExpectedFormat": {"message":"预计格式"},
-  "sideCardSize": {"message":"大小"},
-  "sidePictureSize": {"message":"画面大小"},
-  "sideCodec": {"message":"编码"},
-  "sideExpectedCodec": {"message":"预计编码"},
-  "sideAutomatic": {"message":"自动"},
-  "sideVersion": {"message":"版本"},
-  "sideDocument": {"message":"文档"},
-  "sideGenericFile": {"message":"文件"},
-  "mediaCodecUnavailable": {"message":"网页未提供所选编码，请换一个版本。"},
-  "mergePreparing": {"message":"正在下载画面和声音。两项都准备好后，Snag 会在本页自动合并。"},
-  "mergeFileReady": {"message":"已准备好"},
-  "mergeSending": {"message":"正在准备本机合并"},
-  "mergeProcessing": {"message":"正在本机合并音画"},
-  "mergeFinished": {"message":"已合并，可在浏览器下载记录中查看"},
-  "mergeUnconfirmed": {"message":"合并工具还没确认收到两个文件。可以查看详情，或重新发送已下载的文件。"},
-  "mergeRetrySend": {"message":"重新发送"},
-  "mergeToolDetails": {"message":"查看合并详情"},
-  "mergeMissingFiles": {"message":"任务缺少画面或声音，请回到侧栏重新下载"},
-  "mergeDownloadFailed": {"message":"有一项下载失败。点该项旁的「重新下载」即可继续。"},
-  "mergeSetupFailed": {"message":"暂时无法准备下载。请回到视频侧栏重新开始合并。"},
-  "mergeNoProgress": {"message":"30 秒没有收到数据"},
-  "sideEpisode": {"message":"第$index$集","placeholders":{"index":{"content":"$1"}}},
-  "sidePlayingResolution": {"message":"网页播放 $quality$","placeholders":{"quality":{"content":"$1"}}},
-  "sideDownloadAt": {"message":"下载 $quality$","placeholders":{"quality":{"content":"$1"}}},
-  "sideTier": {"message":"画质"},
-  "sideEncodings": {"message":"编码版本"},
-  "sideCapturedVersion": {"message":"已抓取的版本"},
-  "sideTierOnPage": {"message":"$name$（切换网页画质）","placeholders":{"name":{"content":"$1"}}},
-  "sideTierNoFile": {"message":"$name$（暂无文件）","placeholders":{"name":{"content":"$1"}}},
-  "sideTierSwitching": {"message":"正在等待网页切换画质…"},
-  "sideTierFailed": {"message":"网页暂未提供「$name$」的文件，已保留原来的下载选项。","placeholders":{"name":{"content":"$1"}}},
-  "mediaDownloadVideo": {"message":"下载视频"},
-  "mediaChoose": {"message":"下载方式"},
-  "mediaAudioOnly": {"message":"仅下载音频"},
-  "mediaVideoOnly": {"message":"下载无声视频"},
-  "mediaFindAudio": {"message":"重新查找声音"},
-  "mediaNoAudio": {"message":"未找到音轨"},
-  "mediaNoVideo": {"message":"未找到画面"},
-  "mediaMerging": {"message":"正在合并音画"},
-  "mediaExtracting": {"message":"正在提取"},
-  "mediaSaving": {"message":"正在保存"},
-  "mediaSpace": {"message":"临时空间不足"},
-  "mediaSourceFailed": {"message":"下载中断"},
-  "mediaPlaylistReadFailed": {"message":"读取播放清单失败"},
-  "mediaSegmentReadFailed": {"message":"读取媒体分片失败"},
-  "mediaFileReadFailed": {"message":"读取媒体文件失败"},
-  "mediaRequestTimeout": {"message":"等待数据超时"},
-  "mediaUnexpectedResponse": {"message":"服务器返回了网页或其他内容"},
-  "mediaResponseIncomplete": {"message":"响应数据不完整"},
-  "mediaSegments": {"message":"正在收集分段"},
-  "mediaPartProgress": {"message":"分片 $done$/$total$ · $percent$%","placeholders":{"done":{"content":"$1"},"total":{"content":"$2"},"percent":{"content":"$3"}}},
-  "mediaSegmentIncomplete": {"message":"视频分段未收齐"},
-  "mediaSegmentUnavailable": {"message":"YouTube 未能播放这个版本"},
-  "mediaSegmentQuality": {"message":"未取得所选画质"},
-  "mediaSaveFailed": {"message":"保存失败"},
-  "mediaBadFile": {"message":"无法处理这个文件"},
-  "mediaProtected": {"message":"此播放列表使用了加密"},
-  "mediaLive": {"message":"直播请使用详情中的录制工具"},
-  "mediaUnavailable": {"message":"本机下载暂不可用"},
-  "mediaClear": {"message":"立即清理"},
-  "mediaCancel": {"message":"取消"},
-  "mediaLocalTool": {"message":"本机音视频处理"},
-  "mediaPickFiles": {"message":"选择媒体文件"},
-  "mediaTasks": {"message":"下载任务"},
-  "mediaRetention": {"message":"暂存 $size$，$time$ 自动清理","placeholders":{"size":{"content":"$1"},"time":{"content":"$2"}}},
+  "sideEstimatedSize": {
+    "message": "约 $size$",
+    "placeholders": {
+      "size": {
+        "content": "$1"
+      }
+    }
+  },
+  "sideCardFormat": {
+    "message": "格式"
+  },
+  "sideSavedFormat": {
+    "message": "保存格式"
+  },
+  "sideExpectedFormat": {
+    "message": "预计格式"
+  },
+  "sideCardSize": {
+    "message": "大小"
+  },
+  "sidePictureSize": {
+    "message": "画面大小"
+  },
+  "sideCodec": {
+    "message": "编码"
+  },
+  "sideExpectedCodec": {
+    "message": "预计编码"
+  },
+  "sideAutomatic": {
+    "message": "自动"
+  },
+  "sideVersion": {
+    "message": "版本"
+  },
+  "sideDocument": {
+    "message": "文档"
+  },
+  "sideGenericFile": {
+    "message": "文件"
+  },
+  "mediaCodecUnavailable": {
+    "message": "网页未提供所选编码，请换一个版本。"
+  },
+  "mergePreparing": {
+    "message": "正在下载画面和声音。两项都准备好后，Snag 会在本页自动合并。"
+  },
+  "mergeFileReady": {
+    "message": "已准备好"
+  },
+  "mergeSending": {
+    "message": "正在准备本机合并"
+  },
+  "mergeProcessing": {
+    "message": "正在本机合并音画"
+  },
+  "mergeFinished": {
+    "message": "已合并，可在浏览器下载记录中查看"
+  },
+  "mergeUnconfirmed": {
+    "message": "合并工具还没确认收到两个文件。可以查看详情，或重新发送已下载的文件。"
+  },
+  "mergeRetrySend": {
+    "message": "重新发送"
+  },
+  "mergeToolDetails": {
+    "message": "查看合并详情"
+  },
+  "mergeMissingFiles": {
+    "message": "任务缺少画面或声音，请回到侧栏重新下载"
+  },
+  "mergeDownloadFailed": {
+    "message": "有一项下载失败。点该项旁的「重新下载」即可继续。"
+  },
+  "mergeSetupFailed": {
+    "message": "暂时无法准备下载。请回到视频侧栏重新开始合并。"
+  },
+  "mergeNoProgress": {
+    "message": "30 秒没有收到数据"
+  },
+  "sideEpisode": {
+    "message": "第$index$集",
+    "placeholders": {
+      "index": {
+        "content": "$1"
+      }
+    }
+  },
+  "sidePlayingResolution": {
+    "message": "网页播放 $quality$",
+    "placeholders": {
+      "quality": {
+        "content": "$1"
+      }
+    }
+  },
+  "sideDownloadAt": {
+    "message": "下载 $quality$",
+    "placeholders": {
+      "quality": {
+        "content": "$1"
+      }
+    }
+  },
+  "sideTier": {
+    "message": "画质"
+  },
+  "sideEncodings": {
+    "message": "编码版本"
+  },
+  "sideCapturedVersion": {
+    "message": "已抓取的版本"
+  },
+  "sideTierOnPage": {
+    "message": "$name$（切换网页画质）",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "sideTierNoFile": {
+    "message": "$name$（暂无文件）",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "sideTierSwitching": {
+    "message": "正在等待网页切换画质…"
+  },
+  "sideTierFailed": {
+    "message": "网页暂未提供「$name$」的文件，已保留原来的下载选项。",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "mediaDownloadVideo": {
+    "message": "下载视频"
+  },
+  "mediaChoose": {
+    "message": "下载方式"
+  },
+  "mediaAudioOnly": {
+    "message": "仅下载音频"
+  },
+  "mediaVideoOnly": {
+    "message": "下载无声视频"
+  },
+  "mediaFindAudio": {
+    "message": "重新查找声音"
+  },
+  "mediaNoAudio": {
+    "message": "未找到音轨"
+  },
+  "mediaNoVideo": {
+    "message": "未找到画面"
+  },
+  "mediaMerging": {
+    "message": "正在合并音画"
+  },
+  "mediaExtracting": {
+    "message": "正在提取"
+  },
+  "mediaSaving": {
+    "message": "正在保存"
+  },
+  "mediaSpace": {
+    "message": "临时空间不足"
+  },
+  "mediaSourceFailed": {
+    "message": "下载中断"
+  },
+  "mediaPlaylistReadFailed": {
+    "message": "读取播放清单失败"
+  },
+  "mediaSegmentReadFailed": {
+    "message": "读取媒体分片失败"
+  },
+  "mediaFileReadFailed": {
+    "message": "读取媒体文件失败"
+  },
+  "mediaRequestTimeout": {
+    "message": "等待数据超时"
+  },
+  "mediaUnexpectedResponse": {
+    "message": "服务器返回了网页或其他内容"
+  },
+  "mediaResponseIncomplete": {
+    "message": "响应数据不完整"
+  },
+  "mediaSegments": {
+    "message": "正在收集分段"
+  },
+  "mediaPartProgress": {
+    "message": "分片 $done$/$total$ · $percent$%",
+    "placeholders": {
+      "done": {
+        "content": "$1"
+      },
+      "total": {
+        "content": "$2"
+      },
+      "percent": {
+        "content": "$3"
+      }
+    }
+  },
+  "mediaSegmentIncomplete": {
+    "message": "视频分段未收齐"
+  },
+  "mediaSegmentUnavailable": {
+    "message": "YouTube 未能播放这个版本"
+  },
+  "mediaSegmentQuality": {
+    "message": "未取得所选画质"
+  },
+  "mediaSaveFailed": {
+    "message": "保存失败"
+  },
+  "mediaBadFile": {
+    "message": "无法处理这个文件"
+  },
+  "mediaProtected": {
+    "message": "此播放列表使用了加密"
+  },
+  "mediaLive": {
+    "message": "直播请使用详情中的录制工具"
+  },
+  "mediaUnavailable": {
+    "message": "本机下载暂不可用"
+  },
+  "mediaClear": {
+    "message": "立即清理"
+  },
+  "mediaCancel": {
+    "message": "取消"
+  },
+  "mediaQueued": {
+    "message": "排队中"
+  },
+  "mediaLocalTool": {
+    "message": "本机音视频处理"
+  },
+  "mediaPickFiles": {
+    "message": "选择媒体文件"
+  },
+  "mediaTasks": {
+    "message": "下载任务"
+  },
+  "mediaRetention": {
+    "message": "暂存 $size$，$time$ 自动清理",
+    "placeholders": {
+      "size": {
+        "content": "$1"
+      },
+      "time": {
+        "content": "$2"
+      }
+    }
+  },
   "sideMerge": {
     "message": "合并音画"
   },
@@ -239,22 +464,54 @@
   "sideHandedOff": {
     "message": "已交给下载工具处理。"
   },
-  "playbackRateLimit": { "message": "播放器不支持这个倍速，请试试 16× 或更低。" },
-  "playbackRateUnsupported": { "message": "请输入当前播放器支持的正数倍速。" },
-  "playbackEnterFullscreen": { "message": "进入视频全屏" },
-  "playbackExitFullscreen": { "message": "退出全屏" },
-  "playbackConfirmFullscreen": { "message": "请点网页下方的「进入视频全屏」。" },
-  "playbackFullscreenBlocked": { "message": "此网页无法进入全屏。" },
-  "sidePreviewLoading": { "message": "正在加载预览…" },
-  "sidePreviewFollows": { "message": "画面随网页播放" },
-  "sidePreviewWaiting": { "message": "等待网页播放器加载" },
-  "sidePlayOnPage": { "message": "播放网页视频" },
-  "sidePreviewUnavailable": { "message": "这个文件暂时无法预览。" },
-  "sidePreviewSegment": { "message": "这个片段无法单独播放。" },
-  "sidePreviewManifest": { "message": "这份播放清单需要配合原网页的播放器预览。" },
-  "sidePreviewSilent": { "message": "文件预览 · 静音" },
-  "sidePlayPreview": { "message": "播放预览" },
-  "sidePausePreview": { "message": "暂停预览" },
+  "playbackRateLimit": {
+    "message": "播放器不支持这个倍速，请试试 16× 或更低。"
+  },
+  "playbackRateUnsupported": {
+    "message": "请输入当前播放器支持的正数倍速。"
+  },
+  "playbackEnterFullscreen": {
+    "message": "进入视频全屏"
+  },
+  "playbackExitFullscreen": {
+    "message": "退出全屏"
+  },
+  "playbackConfirmFullscreen": {
+    "message": "请点网页下方的「进入视频全屏」。"
+  },
+  "playbackFullscreenBlocked": {
+    "message": "此网页无法进入全屏。"
+  },
+  "sidePreviewLoading": {
+    "message": "正在加载预览…"
+  },
+  "sidePreviewFollows": {
+    "message": "画面随网页播放"
+  },
+  "sidePreviewWaiting": {
+    "message": "等待网页播放器加载"
+  },
+  "sidePlayOnPage": {
+    "message": "播放网页视频"
+  },
+  "sidePreviewUnavailable": {
+    "message": "这个文件暂时无法预览。"
+  },
+  "sidePreviewSegment": {
+    "message": "这个片段无法单独播放。"
+  },
+  "sidePreviewManifest": {
+    "message": "这份播放清单需要配合原网页的播放器预览。"
+  },
+  "sidePreviewSilent": {
+    "message": "文件预览 · 静音"
+  },
+  "sidePlayPreview": {
+    "message": "播放预览"
+  },
+  "sidePausePreview": {
+    "message": "暂停预览"
+  },
   "sideNoPreview": {
     "message": "暂无预览"
   },
@@ -270,48 +527,132 @@
   "sideFindHint": {
     "message": "「重新扫描」会保留播放进度。「刷新网页」会让网页重新加载。"
   },
-  "playbackTitle": { "message": "播放控制" },
-  "playbackBack": { "message": "返回资源列表" },
-  "playbackFind": { "message": "重新查找" },
-  "playbackSource": { "message": "要控制的网页" },
-  "playbackChoose": { "message": "选择播放器" },
-  "playbackSpeed": { "message": "播放速度" },
-  "playbackCustom": { "message": "自定义…" },
-  "playbackApply": { "message": "应用" },
-  "playbackPosition": { "message": "播放进度" },
-  "playbackEmpty": { "message": "这个网页还没有可控制的播放器" },
-  "playbackEmptyHelp": { "message": "先在网页上播放一段视频或音频，播放按钮就会出现在这里。" },
-  "playbackChoosePage": { "message": "选择一个网页" },
-  "playbackPageHelp": { "message": "从上方选择有视频或音频的网页，或切换到它的标签页。" },
-  "playbackLive": { "message": "直播" },
-  "playbackTools": { "message": "下载与解析工具" },
-  "playbackGone": { "message": "播放器已离开当前网页，正在重新查找。" },
-  "playbackActionFailed": { "message": "网页未能执行这一步。请在原网页的播放器中操作。" },
-  "playbackShotFailed": { "message": "这个播放器暂时无法保存截图。" },
-  "settingsGeneral": { "message": "常用设置" },
-  "settingsCapture": { "message": "抓取规则" },
-  "settingsExtensions": { "message": "文件后缀" },
-  "settingsMediaTypes": { "message": "媒体类型" },
-  "settingsDownloads": { "message": "下载与命名" },
-  "settingsNames": { "message": "文件名模板" },
-  "settingsAdvanced": { "message": "高级设置" },
-  "settingsBackup": { "message": "备份与维护" },
-  "settingsCategory": { "message": "设置分类" },
-  "settingsBrowsing": { "message": "侧栏与资源列表" },
-  "settingsSidebar": { "message": "点击扩展图标打开侧栏" },
-  "settingsBadge": { "message": "在扩展图标上显示资源数量" },
-  "settingsDedup": { "message": "忽略重复出现的资源" },
-  "settingsNewest": { "message": "新发现的资源排在前面" },
-  "settingsSaveFiles": { "message": "保存文件" },
-  "settingsAskWhere": { "message": "每次下载前选择保存位置" },
-  "settingsUseNames": { "message": "使用自定义文件名" },
-  "settingsEditName": { "message": "编辑文件名模板" },
-  "settingsAutoSave": { "message": "更改会自动保存。" },
-  "settingsSaved": { "message": "已保存" },
-  "settingsSaveFailed": { "message": "未能保存，请重试。" },
-  "settingsTransfer": { "message": "备份设置" },
-  "settingsMaintenance": { "message": "维护" },
-  "port": { "message": "端口" },
+  "playbackTitle": {
+    "message": "播放控制"
+  },
+  "playbackBack": {
+    "message": "返回资源列表"
+  },
+  "playbackFind": {
+    "message": "重新查找"
+  },
+  "playbackSource": {
+    "message": "要控制的网页"
+  },
+  "playbackChoose": {
+    "message": "选择播放器"
+  },
+  "playbackSpeed": {
+    "message": "播放速度"
+  },
+  "playbackCustom": {
+    "message": "自定义…"
+  },
+  "playbackApply": {
+    "message": "应用"
+  },
+  "playbackPosition": {
+    "message": "播放进度"
+  },
+  "playbackEmpty": {
+    "message": "这个网页还没有可控制的播放器"
+  },
+  "playbackEmptyHelp": {
+    "message": "先在网页上播放一段视频或音频，播放按钮就会出现在这里。"
+  },
+  "playbackChoosePage": {
+    "message": "选择一个网页"
+  },
+  "playbackPageHelp": {
+    "message": "从上方选择有视频或音频的网页，或切换到它的标签页。"
+  },
+  "playbackLive": {
+    "message": "直播"
+  },
+  "playbackTools": {
+    "message": "下载与解析工具"
+  },
+  "playbackGone": {
+    "message": "播放器已离开当前网页，正在重新查找。"
+  },
+  "playbackActionFailed": {
+    "message": "网页未能执行这一步。请在原网页的播放器中操作。"
+  },
+  "playbackShotFailed": {
+    "message": "这个播放器暂时无法保存截图。"
+  },
+  "settingsGeneral": {
+    "message": "常用设置"
+  },
+  "settingsCapture": {
+    "message": "抓取规则"
+  },
+  "settingsExtensions": {
+    "message": "文件后缀"
+  },
+  "settingsMediaTypes": {
+    "message": "媒体类型"
+  },
+  "settingsDownloads": {
+    "message": "下载与命名"
+  },
+  "settingsNames": {
+    "message": "文件名模板"
+  },
+  "settingsAdvanced": {
+    "message": "高级设置"
+  },
+  "settingsBackup": {
+    "message": "备份与维护"
+  },
+  "settingsCategory": {
+    "message": "设置分类"
+  },
+  "settingsBrowsing": {
+    "message": "侧栏与资源列表"
+  },
+  "settingsSidebar": {
+    "message": "点击扩展图标打开侧栏"
+  },
+  "settingsBadge": {
+    "message": "在扩展图标上显示资源数量"
+  },
+  "settingsDedup": {
+    "message": "忽略重复出现的资源"
+  },
+  "settingsNewest": {
+    "message": "新发现的资源排在前面"
+  },
+  "settingsSaveFiles": {
+    "message": "保存文件"
+  },
+  "settingsAskWhere": {
+    "message": "每次下载前选择保存位置"
+  },
+  "settingsUseNames": {
+    "message": "使用自定义文件名"
+  },
+  "settingsEditName": {
+    "message": "编辑文件名模板"
+  },
+  "settingsAutoSave": {
+    "message": "更改会自动保存。"
+  },
+  "settingsSaved": {
+    "message": "已保存"
+  },
+  "settingsSaveFailed": {
+    "message": "未能保存，请重试。"
+  },
+  "settingsTransfer": {
+    "message": "备份设置"
+  },
+  "settingsMaintenance": {
+    "message": "维护"
+  },
+  "port": {
+    "message": "端口"
+  },
   "extensionName": {
     "message": "Snag"
   },
@@ -858,7 +1199,9 @@
   "mp4Format": {
     "message": "mp4格式"
   },
-  "writeDirectlyToFile": { "message": "直接写入指定文件" },
+  "writeDirectlyToFile": {
+    "message": "直接写入指定文件"
+  },
   "downloadWhileSaving": {
     "message": "边下边存"
   },

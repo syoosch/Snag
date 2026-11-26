@@ -37,4 +37,16 @@ function pictureInfo(bytes) {
     return {frames,fps:frames*scale/ticks,seconds:ticks/scale};
 }
 
-module.exports = {boxes, videoCodec, pictureInfo};
+function checkFastStart(bytes,{width,height,frames,fps,seconds}) {
+    assert.ok(bytes?.length,'saved MP4 is nonempty');
+    const top = boxes(bytes), names = top.map(b=>b.name);
+    assert.equal(names[0],'ftyp');
+    assert.ok(names.includes('moov') && names.indexOf('moov') < names.indexOf('mdat') && !names.includes('moof'),'indexed fast-start MP4');
+    const movie = top.find(b=>b.name==='moov');
+    const video = boxes(movie.data.subarray(8)).find(b=>b.name==='trak' && child(child(b,'mdia'),'hdlr').data.toString('ascii',16,20)==='vide');
+    const header = child(video,'tkhd').data;
+    assert.equal(header.readUInt32BE(header.length-8)/65536,width);
+    assert.equal(header.readUInt32BE(header.length-4)/65536,height);
+    assert.deepEqual(pictureInfo(bytes),{frames,fps,seconds});
+}
+module.exports = {boxes, videoCodec, pictureInfo, checkFastStart};

@@ -102,7 +102,6 @@ function isMediaRuleId(id) { return id >= mediaRuleBase && id < mediaRuleBase + 
         const media = new URL(url);
         if (!/^https?:$/.test(media.protocol)) throw new Error('mediaSourceFailed');
         media.hash = '';
-        if (/[|*^]/.test(media.href)) throw new Error('mediaSourceFailed');
         const headers = Object.entries(values || {}).filter(([k,v]) => ['referer','origin','user-agent'].includes(k) && typeof v === 'string');
         if (!headers.length) return null;
         const rules = await chrome.declarativeNetRequest.getSessionRules();
@@ -112,10 +111,12 @@ function isMediaRuleId(id) { return id >= mediaRuleBase && id < mediaRuleBase + 
             id = mediaRuleBase + nextRule;
             nextRule = (nextRule + 1) % mediaRuleCount;
         } while (used.has(id));
+        const match = /[|*^]/.test(media.href) ? {regexFilter:'^' + media.href.replace(/[.*+?^$(){}|[\]\\]/g,'\\$&') + '$'} :
+            {urlFilter:'|' + media.href + '|'};
         await chrome.declarativeNetRequest.updateSessionRules({addRules:[{id,priority:2,
-            condition:{urlFilter:'|' + media.href + '|',isUrlFilterCaseSensitive:true,initiatorDomains:[prefix],tabIds:[-1],resourceTypes:['xmlhttprequest']},
+            condition:{...match,isUrlFilterCaseSensitive:true,initiatorDomains:[prefix],tabIds:[-1],resourceTypes:['xmlhttprequest']},
             action:{type:'modifyHeaders',requestHeaders:headers.map(([header,value]) => ({header,value,operation:'set'}))}
-        }]});
+        }]}).catch(() => { throw new Error('mediaSourceFailed'); });
         return id;
     }
     async function bridge(m,sender) {
@@ -161,7 +162,9 @@ function isMediaRuleId(id) { return id >= mediaRuleBase && id < mediaRuleBase + 
         if (!['start','list','cancel','retry','clear'].includes(m.op)) throw new Error('mediaUnavailable');
         if (m.op === 'list' && !await hasHost() && !creating) return [];
         await ensureHost();
-        const result = await send({op:m.op,request:m.request,id:m.id});
+        const command = {op:m.op,id:m.id};
+        if (m.op === 'start' || m.op === 'retry') command.request = m.request;
+        const result = await send(command);
         if (!result?.ok) throw new Error(result?.error || 'mediaUnavailable');
         return result.value;
     }

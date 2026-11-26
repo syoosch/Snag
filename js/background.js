@@ -4,7 +4,7 @@
  * firefox 在 manifest 文件中已经加载以下脚本，如果已经加载 G 变量存在，不再加载。
  */
 if (typeof G === 'undefined') {
-    importScripts("/js/polyfill.js", "/js/function.js", "/js/templates.js", "/js/init.js", "/js/media-bridge.js", "/js/local-stream.js");
+    importScripts("/js/polyfill.js", "/js/function.js", "/js/templates.js", "/js/init.js", "/js/media-bridge.js", "/js/local-stream.js", "/js/media-formats.js");
 }
 SnagStream.sweep().catch(console.warn);
 
@@ -34,6 +34,7 @@ let debounceCount = 0;
 let debounceTime = 0;
 const reFilename = /filename="?([^"]+)"?/;
 const srcdocDocuments = new Set();
+const segmentTransfers = new Map();
 const fileMimeHints = new Map(Object.entries({
     jpg:"image/jpeg", jpeg:"image/jpeg", png:"image/png", gif:"image/gif", webp:"image/webp", avif:"image/avif",
     svg:"image/svg+xml", bmp:"image/bmp", ico:"image/x-icon", pdf:"application/pdf"
@@ -183,6 +184,7 @@ function findMedia(data, isRegex = false, filter = false, timer = false) {
     if (!isRegex) {
         // 获取头部信息
         data.header = getResponseHeadersValue(data);
+        observeSegmentTransfer(data);
         //检查后缀
         if (!filter && ext != undefined) {
             filter = CheckExtension(ext, data.header?.size);
@@ -212,7 +214,15 @@ function findMedia(data, isRegex = false, filter = false, timer = false) {
         }
     }
 
-    if (!filter) { return; }
+    if (!filter) {
+        // Resource Timing can hide application/octet-stream. Pass only this response hint to its originating document.
+        if (!isRegex && data.tabId >= 0 && data.frameId >= 0 && data.method === "GET" && data.type === "xmlhttprequest" &&
+            data.header?.type === "application/octet-stream" && data.documentUrl !== "about:srcdoc" && !srcdocDocuments.has(data.documentId)) {
+            const target = data.documentId && !G.isFirefox ? {documentId:data.documentId} : {frameId:data.frameId};
+            chrome.tabs.sendMessage(data.tabId,{Message:"sidebarBinarySample",url:data.url,time:data.timeStamp},target).catch(() => {});
+        }
+        return;
+    }
 
     // 谜之原因 获取得资源 tabId可能为 -1 firefox中则正常
     // 检查是 -1 使用当前激活标签得tabID
@@ -246,8 +256,10 @@ function findMedia(data, isRegex = false, filter = false, timer = false) {
             name: name,
             url: data.url,
             size: data.header?.size,
+            responseSize: data.statusCode === 206 ? data.header?.responseSize || 0 : undefined,
             ext: ext,
             type: data.mime ?? data.header?.type,
+            codecs: data.header?.codecs,
             tabId: data.tabId,
             frameId: data.frameId,
             documentId: data.documentId,
@@ -338,6 +350,17 @@ function findMedia(data, isRegex = false, filter = false, timer = false) {
 function isCapturedImage(record) {
     return record.type?.startsWith("image/") || fileMimeHints.get(record.ext)?.startsWith("image/");
 }
+function observeSegmentTransfer(data) {
+    const {tabId,frameId,documentId,url,header} = data;
+    if (tabId < 0 || frameId < 0 || data.method !== "GET" || ![200,206].includes(data.statusCode) ||
+        data.documentUrl === "about:srcdoc" || srcdocDocuments.has(documentId) ||
+        !Number.isSafeInteger(header.responseSize) || header.responseSize <= 0 ||
+        !SnagFormat.segmentSample(url,header.type,data.type === "xmlhttprequest" || data.type === "media")) return;
+    const sample = {url,frameId,documentId,getTime:data.timeStamp,bytes:header.responseSize,offset:header.rangeStart};
+    if (!segmentTransfers.has(tabId)) segmentTransfers.set(tabId,new Map());
+    SnagFormat.rememberTransfer(segmentTransfers.get(tabId),sample);
+    chrome.runtime.sendMessage({Message:"sidebarSegmentTransfer",tabId,sample}).catch(() => {});
+}
 
 // Page discoveries have no network request ID. Use the same capture rules without triggering auto-download.
 function sidebarPageFile(file, tabId, checkSize) {
@@ -412,7 +435,8 @@ chrome.runtime.onMessage.addListener(function (Message, sender, sendResponse) {
             }
             return;
         }
-        sendResponse({ records: blocked ? [] : cacheData[Message.tabId] || [], blocked, enabled: G.enable });
+        const transfers = !blocked && G.enable && segmentTransfers.get(Message.tabId);
+        sendResponse({ records: blocked ? [] : cacheData[Message.tabId] || [], transfers:transfers ? [...transfers.values()] : [], blocked, enabled: G.enable });
         return;
     }
 
@@ -696,6 +720,7 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
  * 检查 注入脚本
  */
 chrome.webNavigation.onCommitted.addListener(function (details) {
+    if (details.frameId === 0) segmentTransfers.delete(details.tabId);
     if (details.url === "about:srcdoc" && details.documentId) {
         srcdocDocuments.add(details.documentId);
         if (srcdocDocuments.size > 512) srcdocDocuments.delete(srcdocDocuments.values().next().value);
@@ -764,6 +789,7 @@ chrome.webNavigation.onCommitted.addListener(function (details) {
  * 监听 标签关闭 清理数据
  */
 chrome.tabs.onRemoved.addListener(function (tabId) {
+    segmentTransfers.delete(tabId);
     // 清理缓存数据
     chrome.alarms.get("nowClear", function (alarm) {
         !alarm && chrome.alarms.create("nowClear", { when: Date.now() + 1000 });
@@ -934,16 +960,27 @@ function getResponseHeadersValue(data) {
     if (data.responseHeaders == undefined || data.responseHeaders.length == 0) { return header; }
     for (let item of data.responseHeaders) {
         item.name = item.name.toLowerCase();
-        if (item.name == "content-length" && data.statusCode !== 206) {
-            header.size ??= parseInt(item.value);
+        if (item.name == "content-length") {
+            const length = Number(item.value);
+            if (Number.isSafeInteger(length) && length >= 0) {
+                header.responseSize ??= length;
+                if (data.statusCode !== 206) header.size ??= length;
+            }
         } else if (item.name == "content-type") {
-            header.type = item.value.split(";")[0].toLowerCase();
+            header.type = item.value.split(";")[0].trim().toLowerCase();
+            const codecs = /;\s*codecs\s*=\s*(?:"([^"]*)"|'([^']*)'|([^;]+))/i.exec(item.value);
+            if (codecs) header.codecs = (codecs[1] ?? codecs[2] ?? codecs[3]).trim();
         } else if (item.name == "content-disposition") {
             header.attachment = item.value;
         } else if (item.name == "content-range") {
-            let size = item.value.split('/')[1];
-            if (size !== '*') {
-                header.size = parseInt(size);
+            const range = /^bytes\s+(\d+)-(\d+)\/(\d+|\*)$/i.exec(item.value.trim());
+            if (range) {
+                const start = Number(range[1]), end = Number(range[2]), size = Number(range[3]);
+                if (Number.isSafeInteger(size)) header.size = size;
+                if (data.statusCode === 206 && Number.isSafeInteger(start) && Number.isSafeInteger(end) && end >= start) {
+                    header.rangeStart = start;
+                    header.responseSize = end-start+1;
+                }
             }
         }
     }

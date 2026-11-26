@@ -3,6 +3,56 @@
 const assert = require('node:assert/strict');
 const {fixture, launch, serve, send, html, intercept, test, until} = require('./lib/harness');
 
+function mountShadow(host,title) {
+    const outer = host.attachShadow({mode:'open'}), inner = document.createElement('snag-inner');
+    outer.append(inner);
+    const root = inner.attachShadow({mode:'open'});
+    root.innerHTML = '<span id="caption"></span><video muted loop aria-labelledby="caption" src="/opening.mp4"></video>';
+    root.getElementById('caption').textContent=title;
+    return root.querySelector('video');
+}
+async function checkShadowPlayers(browser,site,t) {
+    const page = await browser.open(site.origin+'/shadow'), tab = await browser.tabId(site.origin+'/shadow');
+    const panel = await browser.open(browser.url('sidebar.html?tabId='+tab));
+    const item = title => 'frames.get(0)?.items.find(i=>i.title==='+JSON.stringify(title)+')';
+    assert.ok(await until(()=>panel.eval(item('Shadow film')+'?.streamId==="4687" && '+item('Shadow film')+'?.loaded')));
+    await page.eval('movie.play()');
+    assert.ok(await until(()=>panel.eval(item('Shadow film')+'?.playing')));
+    await page.eval('movie.pause()');
+    assert.ok(await until(()=>panel.eval(item('Shadow film')+'?.playing===false')));
+    const row = 'rows.get(groups.find(g=>g.point?.title==="Shadow film").key).node';
+    await panel.eval(row+'.querySelector(".locate").click()');
+    assert.ok(await until(()=>page.eval('document.querySelector("[data-snag-outline]")?.getBoundingClientRect().top===movie.getBoundingClientRect().top')));
+    const hit = await page.eval('(()=>{const rect=movie.getBoundingClientRect();movie.style.pointerEvents="none";'+
+        'const cover=document.createElement("div");cover.style.cssText="position:fixed;z-index:2;"+'+
+        '"left:"+rect.left+"px;top:"+rect.top+"px;width:"+rect.width+"px;height:"+rect.height+"px";'+
+        'document.querySelector("snag-outer").shadowRoot.append(cover);return [rect.left+rect.width/2,rect.top+rect.height/2]})()');
+    await panel.eval('document.querySelector("#pick").click()');
+    assert.ok(await until(()=>panel.eval('picking')));
+    await page.click(...hit);
+    assert.ok(await until(()=>panel.eval('!picking && picked?.title==="Shadow film"')));
+    assert.ok(!await panel.eval('frames.get(0).items.some(i=>i.title==="closed player")'));
+    await page.eval('document.querySelector("snag-outer").remove()');
+    assert.ok(await until(()=>panel.eval('!('+item('Shadow film')+')')));
+    t.check('嵌套两层开放根的播放器自动出现，使用内部标签和外层编号，播放、暂停、定位及移除均自动更新',true);
+    await page.eval('const extra=document.createElement("snag-late");document.body.append(extra);'+
+        'const arriving=document.createElement("snag-arriving");mountShadow(arriving,"Added subtree");document.body.append(arriving)');
+    assert.ok(await until(()=>panel.eval(item('Added subtree')+'?.loaded')));
+    await page.eval('mountShadow(extra,"Delayed attach"); true');
+    await panel.eval('rescan()');
+    assert.ok(await until(()=>panel.eval(item('Delayed attach')+'?.loaded')));
+    await page.eval('const depthHost=document.createElement("div");let r=depthHost;for(let d=1;d<=7;d++){'+
+        'const open=r.attachShadow({mode:"open"});const img=document.createElement("img");img.alt="Depth "+d;open.append(img);'+
+        'r=document.createElement("div");open.append(r)}document.body.append(depthHost);');
+    assert.ok(await until(()=>panel.eval('!!('+item('Depth 6')+')')));
+    assert.ok(!await panel.eval('!!('+item('Depth 7')+')'));
+    await page.eval('const nodes=new DocumentFragment();for(let i=0;i<68;i++){const h=document.createElement("div");'+
+        'const img=document.createElement("img");img.alt="Quota "+i;h.attachShadow({mode:"open"}).append(img);nodes.append(h)}document.body.append(nodes)');
+    assert.ok(await until(()=>panel.eval('frames.get(0).items.filter(i=>i.title.startsWith("Quota ")).length===54')));
+    assert.deepEqual(panel.errors,[]);
+    t.check('新增宿主即时发现，重新扫描补获延迟创建的根，关闭根、六层深度和 64 个开放根的边界生效',true);
+}
+
 test('播放器识别与广告切换', async t => {
     const movie = fixture('video.mp4');
     // A real fragmented MP4 fed into MediaSource. The player never gets an HTTP file URL.
@@ -20,6 +70,9 @@ test('播放器识别与广告切换', async t => {
         await video.play();
     }`;
     const site = await serve((req,res,url) => {
+        if (url.pathname === '/shadow') return html(res,'<span id="caption">Wrong document label</span><snag-outer data-video-id="4687"></snag-outer>'+
+            '<script>'+mountShadow.toString()+';const movie=mountShadow(document.querySelector("snag-outer"),"Shadow film");'+
+            'const h=document.createElement("div");h.attachShadow({mode:"closed"}).innerHTML=\'<video aria-label="closed player"></video>\';document.body.append(h)</script>');
         if (url.pathname === '/show') return html(res,'<video id="player" muted aria-label="Opening"><source src="/opening.mp4"></video>');
         if (url.pathname === '/embed') return html(res,'<video aria-label="Embedded feature" muted></video><script>('+startStream+')(document.querySelector("video"))</script>');
         if (url.pathname === '/feature.m3u8') {
@@ -139,4 +192,5 @@ test('播放器识别与广告切换', async t => {
     assert.ok(await yp.eval('document.querySelector("#multi").hidden'),'a player without a file cannot be batch-downloaded');
     t.check('站内换片清除旧下载地址，需登录或仅发现播放器时不会提供无效下载',true);
     assert.deepEqual([...panel.errors,...yp.errors],[]);
+    await checkShadowPlayers(b,site,t);
 });

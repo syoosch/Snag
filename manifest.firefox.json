@@ -7,6 +7,7 @@
       "js/init.js",
       "js/media-bridge.js",
       "js/local-stream.js",
+      "js/media-formats.js",
       "js/background.js"
     ]
   },
@@ -95,6 +96,7 @@
       ],
       "js": [
         "js/content-script.js",
+        "js/bili-route.js",
         "js/sidebar-bili.js",
         "js/media-formats.js",
         "js/sidebar-player.js",
@@ -104,7 +106,7 @@
       "run_at": "document_start"
     },
     {
-      "matches": ["https://*.bilibili.com/video/*"],
+      "matches": ["https://*.bilibili.com/video/*", "https://*.bilibili.com/list/*", "https://*.bilibili.com/medialist/play/*", "https://*.bilibili.com/watchlater/*"],
       "js": ["js/bili-playback.js"],
       "world": "MAIN",
       "run_at": "document_start"
@@ -120,5 +122,5 @@
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
   },
   "default_locale": "en",
-  "version": "1.0.5"
+  "version": "1.0.9"
 }
